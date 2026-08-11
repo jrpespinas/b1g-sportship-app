@@ -1,0 +1,188 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-08-07T00:00:00.000Z",
+  "title": "Design System: B1G Sportship — Player Inventory",
+  "extensions": {
+    "colorMeta": {
+      "ember": {
+        "role": "primary",
+        "displayName": "Ember",
+        "canonical": "#FF6F2F",
+        "tonalRamp": ["#FFF1E8", "#FFD9BE", "#FFB98A", "#FF9457", "#FF6F2F", "#E0551A", "#B84412", "#7A2D0C"]
+      },
+      "graphite": {
+        "role": "neutral",
+        "displayName": "Graphite",
+        "canonical": "#1D1D1F",
+        "tonalRamp": ["#F5F5F7", "#E5E5E7", "#D2D2D7", "#A1A1A6", "#6E6E73", "#48484D", "#2C2C2E", "#1D1D1F"]
+      },
+      "success": {
+        "role": "status",
+        "displayName": "Success Green",
+        "canonical": "#1A7F4B",
+        "tonalRamp": ["#EAF7F0", "#C5EBD7", "#8FD6AF", "#57BE85", "#1A7F4B", "#166A3F", "#125533", "#0D3D25"]
+      },
+      "danger": {
+        "role": "status",
+        "displayName": "Danger Red",
+        "canonical": "#D92D20",
+        "tonalRamp": ["#FEF3F2", "#FBD3CE", "#F5988A", "#EB6152", "#D92D20", "#B3241A", "#8C1C14", "#63140E"]
+      },
+      "series-returnee": {
+        "role": "chart-series",
+        "displayName": "Returnee Blue",
+        "canonical": "#2A78D6",
+        "tonalRamp": ["#CDE2FB", "#9EC5F4", "#6DA7EC", "#3987E5", "#2A78D6", "#1C5CAB", "#104281", "#0D366B"]
+      },
+      "series-firsttimer": {
+        "role": "chart-series",
+        "displayName": "First-Timer Ember",
+        "canonical": "#FF6F2F",
+        "tonalRamp": ["#FFF1E8", "#FFD9BE", "#FFB98A", "#FF9457", "#FF6F2F", "#E0551A", "#B84412", "#7A2D0C"]
+      }
+    },
+    "typographyMeta": {
+      "metric": { "displayName": "Metric", "purpose": "Stat card values only — the one number-forward size in the system." },
+      "headline": { "displayName": "Headline", "purpose": "Page-level titles, one per step (Upload / Possible duplicate / Batch resolved)." },
+      "title": { "displayName": "Title", "purpose": "Card-level primary content — submission and candidate names share this size deliberately, so neither is visually biased in the comparison." },
+      "body": { "displayName": "Body", "purpose": "Paragraphs, button labels, form input text." },
+      "label": { "displayName": "Label", "purpose": "Section labels, form field labels, and secondary meta lines — one size for every 'supporting text' tier, sentence case, no eyebrow treatment." },
+      "micro": { "displayName": "Micro", "purpose": "Badge text." },
+      "kbd": { "displayName": "Kbd", "purpose": "Keyboard-shortcut hint chips only — the floor of the scale." }
+    },
+    "shadows": [
+      { "name": "card", "value": "0 1px 2px rgba(0,0,0,0.04), 0 4px 16px rgba(0,0,0,0.06)", "purpose": "The system's only shadow — ambient lift for every card, no hierarchy meaning." }
+    ],
+    "motion": [
+      { "name": "fade-in", "value": "translateY(4px) + opacity, 0.2s ease-out", "purpose": "Shared entrance for arriving at a new step (select, summary)." },
+      { "name": "advance-in", "value": "translateX(10px) + opacity, 0.18s ease-out", "purpose": "Signature transition reserved for advancing through the triage queue — reads as moving forward, distinct from a generic entrance." }
+    ],
+    "breakpoints": [
+      { "name": "sm", "value": "640px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Main call to action per step (Process roster, etc). Ember fill with Graphite text — never white text, see the Ember Contrast Rule.",
+      "html": "<button class=\"ds-btn-primary\">Process roster</button>",
+      "css": ".ds-btn-primary { display: inline-flex; align-items: center; justify-content: center; gap: 8px; border-radius: 10px; padding: 10px 16px; font-size: 15px; font-weight: 500; background-color: #FF6F2F; color: #1D1D1F; transition: background-color 150ms ease-out, transform 150ms ease-out; } .ds-btn-primary:hover { background-color: #F2621F; } .ds-btn-primary:active { background-color: #E0551A; transform: scale(0.98); } .ds-btn-primary:disabled { opacity: 0.4; pointer-events: none; } .ds-btn-primary:focus-visible { outline: none; box-shadow: 0 0 0 2px #ffffff, 0 0 0 4px #FF6F2F; }"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Lower-emphasis action that still needs presence — e.g. a triage candidate's 'Same person' action.",
+      "html": "<button class=\"ds-btn-secondary\">Same person</button>",
+      "css": ".ds-btn-secondary { display: inline-flex; align-items: center; justify-content: center; gap: 8px; border-radius: 10px; padding: 10px 16px; font-size: 15px; font-weight: 500; background-color: #ffffff; color: #1D1D1F; border: 1px solid #D2D2D7; transition: background-color 150ms ease-out, transform 150ms ease-out; } .ds-btn-secondary:hover { background-color: #F5F5F7; } .ds-btn-secondary:active { transform: scale(0.98); }"
+    },
+    {
+      "name": "Ghost Button",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "Lowest-emphasis action on a screen, e.g. 'Skip' in the triage queue.",
+      "html": "<button class=\"ds-btn-ghost\">Skip</button>",
+      "css": ".ds-btn-ghost { display: inline-flex; align-items: center; justify-content: center; gap: 8px; border-radius: 10px; padding: 10px 16px; font-size: 15px; font-weight: 500; background-color: transparent; color: #6E6E73; transition: background-color 150ms ease-out, color 150ms ease-out; } .ds-btn-ghost:hover { background-color: #F5F5F7; color: #1D1D1F; }"
+    },
+    {
+      "name": "Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "The system's only container. Always the single ambient shadow plus a hairline border, never a background shift off canvas.",
+      "html": "<div class=\"ds-card\"><div class=\"ds-card-label\">This week's submission</div><div class=\"ds-card-title\">Miguel Santos</div></div>",
+      "css": ".ds-card { background: #ffffff; border: 1px solid #E5E5E7; border-radius: 16px; padding: 20px; box-shadow: 0 1px 2px rgba(0,0,0,0.04), 0 4px 16px rgba(0,0,0,0.06); } .ds-card-label { font-size: 13px; font-weight: 500; color: #6E6E73; } .ds-card-title { margin-top: 6px; font-size: 19px; font-weight: 600; color: #1D1D1F; }"
+    },
+    {
+      "name": "Stat Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "Card variant for the batch-summary and dashboard KPI grids — a label, a large proportional-figure number (never tabular-nums at this size), and an optional accent treatment on the value.",
+      "html": "<div class=\"ds-card ds-stat-card\"><div class=\"ds-card-label\">New players</div><div class=\"ds-stat-value ds-stat-value--accent\">4</div></div>",
+      "css": ".ds-stat-card { padding: 20px; } .ds-stat-value { margin-top: 6px; font-size: 28px; font-weight: 600; line-height: 1; color: #1D1D1F; } .ds-stat-value--accent { color: #C2450F; }"
+    },
+    {
+      "name": "Accent Badge",
+      "kind": "chip",
+      "refersTo": "badge-accent",
+      "description": "Pill badge tied to the accent's meaning — e.g. the triage queue's position counter. Reserved for genuinely accent-meaningful state, not decorative repetition (a list of tied tags uses Neutral instead).",
+      "html": "<span class=\"ds-badge ds-badge--accent\">1 of 2</span>",
+      "css": ".ds-badge { display: inline-flex; align-items: center; border-radius: 9999px; padding: 4px 10px; font-size: 12px; font-weight: 500; line-height: 1; font-variant-numeric: tabular-nums; } .ds-badge--accent { background: #FFF1E8; color: #C2450F; } .ds-badge--neutral { background: #F5F5F7; color: #6E6E73; } .ds-badge--success { background: #EAF7F0; color: #1A7F4B; }"
+    },
+    {
+      "name": "Text Input",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Date and text fields on the select step. Solid border, Ember focus ring — never a border-color-only focus change.",
+      "html": "<input class=\"ds-input\" type=\"text\" placeholder=\"Admin\" />",
+      "css": ".ds-input { width: 100%; border-radius: 10px; border: 1px solid #D2D2D7; background: #ffffff; padding: 8px 12px; font-size: 15px; color: #1D1D1F; } .ds-input::placeholder { color: #A1A1A6; } .ds-input:focus-visible { outline: none; box-shadow: 0 0 0 2px #FF6F2F; }"
+    },
+    {
+      "name": "Keyboard Hint Chip",
+      "kind": "chip",
+      "refersTo": null,
+      "description": "Signature component — a single-character keycap attached inline to the triage action it triggers (1 / N / S).",
+      "html": "<kbd class=\"ds-kbd\">N</kbd>",
+      "css": ".ds-kbd { display: inline-flex; align-items: center; justify-content: center; min-width: 20px; height: 20px; margin-left: 8px; border-radius: 5px; border: 1px solid #D2D2D7; background: #F5F5F7; font-size: 11px; font-weight: 500; color: #A1A1A6; }"
+    },
+    {
+      "name": "Line Chart",
+      "kind": "custom",
+      "refersTo": null,
+      "description": "Trend chart (e.g. Returnees vs. First-timers per game night). 2px lines round-capped, hairline solid gridlines, always-on legend for 2+ series, direct end-labels only, hover crosshair + tooltip, table-view twin. Colors from Colors → Chart Series, never eyeballed.",
+      "html": "<div class=\"ds-chart\"><svg viewBox=\"0 0 200 100\" class=\"ds-chart-svg\"><line x1=\"10\" y1=\"80\" x2=\"190\" y2=\"80\" class=\"ds-chart-grid\" /><path d=\"M10,80 L100,40 L190,20\" class=\"ds-chart-line ds-chart-line--returnee\" /><circle cx=\"190\" cy=\"20\" r=\"4\" class=\"ds-chart-dot ds-chart-dot--returnee\" /></svg></div>",
+      "css": ".ds-chart-grid { stroke: #E5E5E7; stroke-width: 1; } .ds-chart-line { fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; } .ds-chart-line--returnee { stroke: #2A78D6; } .ds-chart-line--firsttimer { stroke: #FF6F2F; } .ds-chart-dot { stroke: #ffffff; stroke-width: 2; } .ds-chart-dot--returnee { fill: #2A78D6; }"
+    },
+    {
+      "name": "Bar Chart",
+      "kind": "custom",
+      "refersTo": null,
+      "description": "Ranked comparison chart (e.g. first-timers by sport). Bars rounded on top corners only (4px), square at the baseline — never rounded on all four. Single accent hue for a single-series comparison; hover tooltip per bar; table-view twin.",
+      "html": "<div class=\"ds-chart\"><svg viewBox=\"0 0 200 100\" class=\"ds-chart-svg\"><path d=\"M20,90 L20,54 Q20,50 24,50 L36,50 Q40,50 40,54 L40,90 Z\" class=\"ds-chart-bar\" /><line x1=\"10\" y1=\"90\" x2=\"190\" y2=\"90\" class=\"ds-chart-axis\" /></svg></div>",
+      "css": ".ds-chart-bar { fill: #FF6F2F; } .ds-chart-axis { stroke: #D2D2D7; stroke-width: 1; }"
+    },
+    {
+      "name": "Navigation",
+      "kind": "nav",
+      "refersTo": null,
+      "description": "The one sanctioned exception to the system's no-chrome discipline — a 56px top bar, added once a 4-page product had no way to move between pages. Shows the same three links (Upload, Players, Dashboard) on every page — access control is deferred, so a role-split nav would hide links without gating anything. Active link is weight+ink only, never a pill or underline.",
+      "html": "<header class=\"ds-nav\"><div class=\"ds-nav-inner\"><a href=\"/upload\" class=\"ds-nav-logo\"><img src=\"/b1g-sportship-mark.png\" alt=\"B1G Sportship\" /></a><nav class=\"ds-nav-links\"><a href=\"/upload\" class=\"ds-nav-link ds-nav-link--active\">Upload</a><a href=\"/players\" class=\"ds-nav-link\">Players</a><a href=\"/dashboard\" class=\"ds-nav-link\">Dashboard</a></nav></div></header>",
+      "css": ".ds-nav { background: #ffffff; border-bottom: 1px solid #E5E5E7; } .ds-nav-inner { max-width: 960px; margin: 0 auto; height: 56px; display: flex; align-items: center; justify-content: space-between; padding: 0 24px; } .ds-nav-logo img { height: 24px; width: auto; } .ds-nav-links { display: flex; align-items: center; gap: 20px; } .ds-nav-link { font-size: 13px; font-weight: 500; color: #6E6E73; transition: color 150ms ease-out; } .ds-nav-link:hover { color: #1D1D1F; } .ds-nav-link--active { font-weight: 600; color: #1D1D1F; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Control Surface",
+    "overview": "This is an operator's panel, not a showcase — a single admin, alone, weekly, dropping a file and trusting the system to place the obvious cases silently while surfacing only what genuinely needs a human call. Every device in the system serves that: a white canvas with almost no chrome, one accent color spent only where a decision or a status actually lives, generous whitespace that reads as calm rather than empty, and a triage step built to be operated — keyboard shortcuts, a forward-advancing transition, a queue that shrinks as you work it.\n\nThe system fuses three references named directly in the brief: Apple Health's native chrome, generous whitespace, and card-based data presentation; Linear's snappy, deliberate, keyboard-fast interaction texture; and Notion/Things 3's calm, content-first, single-item focus. Nothing here is warm or ministry-themed by design — this tool serves a church sports program, but its register is neutral efficient utility, deliberately separated from the program's own identity. It explicitly rejects the generic SaaS admin dashboard: no sidebar, no data-table-plus-chart-widgets scaffold, no navigation chrome standing between the admin and the task.",
+    "keyCharacteristics": [
+      "White/clean ground as the overwhelming majority of every screen; color is earned, never ambient.",
+      "One accent (Ember, #FF6F2F) spent only on primary actions and states that need attention — never decorative, never small standalone text.",
+      "Cards are the only container, always soft-shadowed, never bordered-and-shadowed at once.",
+      "Motion is signature, not scattered: a shared entrance fade for arriving at a step, a distinct forward-slide reserved for advancing through the triage queue.",
+      "No kickers, no eyebrows, no uppercase tracked labels anywhere in the system.",
+      "Chart series are a separate, validated extension (blue + Ember) — CVD-checked, never eyeballed, never expanded past the documented palette order."
+    ],
+    "rules": [
+      { "name": "The Ember Contrast Rule", "body": "Ember (#FF6F2F) has a measured WCAG contrast of ~2.8:1 against both white and black at small sizes — it fails body-text contrast either way. Ember therefore only ever appears as a fill (paired with Graphite text on top, never white) or as Ember Ink (#C2450F) when the accent needs to be small text or an icon directly on canvas. Never render raw Ember as text.", "section": "colors" },
+      { "name": "The One-Voice Rule", "body": "Ember is the only saturated color with a decorative role in the system. Success and Danger are status signals, not palette options — do not reach for them to add visual variety.", "section": "colors" },
+      { "name": "The No-Eyebrow Rule", "body": "No label in the system is uppercase, letter-spaced, or set above a heading as a kicker. Section labels sit at Label size, sentence case, directly adjacent to the content they describe.", "section": "typography" },
+      { "name": "The One-Shadow Rule", "body": "There is exactly one shadow value. If a new component seems to need a different depth, that is a signal to reconsider the component, not to add a shadow tier.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do spend Ember only on fills paired with Graphite text, or as Ember Ink for small text/icons directly on canvas — never raw Ember as text.",
+      "Do keep every card at the single Card shadow value and 16px radius, no exceptions.",
+      "Do set section/field labels in sentence case at Label size, adjacent to their content — never as an uppercase kicker above it.",
+      "Do use tabular figures only for aligned columns and compact inline counters — never on a large standalone stat value.",
+      "Do reserve Success/Danger strictly for status, never as palette variety.",
+      "Do validate any new chart series color with validate_palette.js before shipping it — never eyeball CVD-safety."
+    ],
+    "donts": [
+      "Don't introduce a sidebar, or any chrome beyond the one documented top bar — no secondary toolbars, breadcrumbs, or decorative header content.",
+      "Don't add a second accent color. One accent, spent deliberately, is the system's discipline.",
+      "Don't use white text on Ember; it fails contrast at this hue (~2.8:1) regardless of weight or size.",
+      "Don't reach for progress bars, completion badges, or celebratory motion — this is a chore tool, not a gamified habit app.",
+      "Don't stack a border, a shadow, and a background-color shift on the same card edge.",
+      "Don't invent a new chart series hue past the documented palette order — the next slot is aqua, not a generated color."
+    ]
+  }
+}

@@ -1,0 +1,170 @@
+@import "tailwindcss";
+
+:root {
+  /* Neutral ground — white/clean is the overwhelming majority of the surface. */
+  --color-canvas: #ffffff;
+  --color-surface: #ffffff;
+  --color-surface-subtle: #f5f5f7;
+  --color-border: #e5e5e7;
+  --color-border-strong: #d2d2d7;
+
+  /* Ink — near-black, not pure black; Apple-native register. */
+  --color-ink: #1d1d1f;
+  --color-ink-secondary: #6e6e73;
+  --color-ink-tertiary: #a1a1a6;
+
+  /*
+   * Accent — #FF6F2F is pinned by the brief and used verbatim for fills,
+   * badges, and large/bold surfaces (always paired with dark ink text on
+   * top, never white — the raw hue only contrasts ~2.8:1 against both
+   * white and black text at small sizes, confirmed by computing WCAG
+   * relative luminance, so it never carries small text itself).
+   * --color-accent-ink is a darkened derivative of the same hue for the
+   * cases where the accent must appear AS text/icon color directly on
+   * white (links, small glyphs) — 5.06:1 on white, passes body text.
+   */
+  --color-accent: #ff6f2f;
+  --color-accent-hover: #f2621f;
+  --color-accent-pressed: #e0551a;
+  --color-accent-tint: #fff1e8;
+  --color-accent-ink: #c2450f;
+
+  --color-success: #1a7f4b;
+  --color-success-tint: #eaf7f0;
+  --color-danger: #d92d20;
+  --color-danger-tint: #fef3f2;
+
+  /*
+   * Chart series colors — a distinct concern from UI chrome. DESIGN.md's
+   * One-Voice Rule governs buttons/badges/etc (Ember only); charts need
+   * series identity, which is a different job. This is the `dataviz` skill's
+   * validated 8-hue categorical palette with Ember substituted into slot 2
+   * (re-validated: worst adjacent CVD unchanged at 9.1, neither worst pair
+   * touches slot 2). Slot 3 (aqua, unchanged from the reference palette) is
+   * `--color-series-neutral` — used by single-series charts that aren't part
+   * of the returnee/first-timer story (DGroup pipeline, attendance
+   * frequency), so they stop silently inheriting Ember's "first-timers"
+   * meaning from a shared default. Re-validated as a 3-slot set: worst
+   * adjacent CVD 10.4, worst normal-vision 29.1, both well clear of the
+   * floor. Add more slots in order (yellow, magenta, green, violet, red)
+   * only when a chart needs a 4th+ series.
+   */
+  --color-series-returnee: #2a78d6;
+  --color-series-firsttimer: var(--color-accent);
+  --color-series-neutral: #1baf7a;
+  --color-chart-grid: var(--color-border);
+  --color-chart-axis: var(--color-border-strong);
+
+  /*
+   * Discipleship segments. The four buckets are a journey
+   * (Leaders -> Members -> Seekers -> Not involved).
+   *
+   * !! UNRESOLVED — the shipped values below are a two-hue-family idea
+   * (blue = in a group, orange = not in a group). The intent is good: it
+   * makes the in/out-group split the eye's first read, which is the split
+   * the ministry acts on. It does not currently validate, measured with
+   * `validate_palette.js` on white:
+   *   - normal-vision floor FAILS, leaders <-> members ΔE 14.6 (floor 15)
+   *   - chroma floor FAILS on #f4b397 (0.085), and it sits at 1.79:1
+   *   - Ember also means "first-timers" in the trend chart on this page
+   * Two blues that both sit inside the categorical lightness band are
+   * inherently too close to clear ΔE 15, so the two-family shape cannot be
+   * rescued by re-stepping alone.
+   *
+   * The set that DID pass, as an ordinal ramp — steps 650/500/400/250 of the
+   * dataviz blue ramp, monotone L, gaps >= 0.06, light end 2.11:1:
+   *   leaders #104281  members #256abf  seekers #3987e5  uninvolved #86b6ef
+   * It also delivers the in/out-group read for free: the two dark bands are
+   * the in-group, the two light bands are not. Restore it, or re-pick the
+   * whole set as four distinct validated hues — but do not leave it half-way.
+   */
+  --color-seg-leaders: #104281;
+  --color-seg-members: #256abf;
+  --color-seg-seekers: #ff6f2f;
+  --color-seg-uninvolved: #eb875c8e;
+
+  /* Analyst-register page ground: white cards read as panels against it. */
+  --color-page: #f4f5f7;
+
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.04), 0 4px 16px rgba(0, 0, 0, 0.06);
+  --shadow-raised: 0 2px 4px rgba(0, 0, 0, 0.06), 0 12px 32px rgba(0, 0, 0, 0.10);
+
+  --font-system:
+    -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display",
+    "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+@theme inline {
+  --color-canvas: var(--color-canvas);
+  --color-surface: var(--color-surface);
+  --color-surface-subtle: var(--color-surface-subtle);
+  --color-border: var(--color-border);
+  --color-border-strong: var(--color-border-strong);
+  --color-ink: var(--color-ink);
+  --color-ink-secondary: var(--color-ink-secondary);
+  --color-ink-tertiary: var(--color-ink-tertiary);
+  --color-accent: var(--color-accent);
+  --color-accent-hover: var(--color-accent-hover);
+  --color-accent-pressed: var(--color-accent-pressed);
+  --color-accent-tint: var(--color-accent-tint);
+  --color-accent-ink: var(--color-accent-ink);
+  --color-success: var(--color-success);
+  --color-success-tint: var(--color-success-tint);
+  --color-danger: var(--color-danger);
+  --color-danger-tint: var(--color-danger-tint);
+  --color-series-returnee: var(--color-series-returnee);
+  --color-series-firsttimer: var(--color-series-firsttimer);
+  --color-series-neutral: var(--color-series-neutral);
+  --color-seg-leaders: var(--color-seg-leaders);
+  --color-seg-members: var(--color-seg-members);
+  --color-seg-seekers: var(--color-seg-seekers);
+  --color-seg-uninvolved: var(--color-seg-uninvolved);
+  --color-page: var(--color-page);
+  --color-chart-grid: var(--color-chart-grid);
+  --color-chart-axis: var(--color-chart-axis);
+  --font-sans: var(--font-system);
+}
+
+body {
+  background: var(--color-canvas);
+  color: var(--color-ink);
+  font-family: var(--font-system);
+  font-feature-settings: "cv11", "ss01";
+}
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Distinct from fadeIn — triage rows advance forward, they don't just appear. */
+@keyframes advanceIn {
+  from {
+    opacity: 0;
+    transform: translateX(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
