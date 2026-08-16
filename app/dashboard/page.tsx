@@ -295,6 +295,12 @@ export default async function DashboardPage() {
                 read every four nights by whoever runs the night. Thirty-two
                 pixels above the heading against twelve below it, so the break
                 reads as a break rather than as another panel gap. */}
+            {/* What leaders offer against what seekers want. Placement, not
+                scheduling: a seeker who cannot meet when any group meets is
+                unplaceable, so this belongs with the pastor's question rather
+                than below the organiser divider where it first shipped. */}
+            <SupplyDemandPanel data={supplyDemand} />
+
             <section aria-labelledby="organiser-section" className="mt-8 border-t border-border pt-5">
               <h2
                 id="organiser-section"
@@ -303,7 +309,7 @@ export default async function DashboardPage() {
                 For organisers
               </h2>
               <p className="mt-1 text-[13px] leading-relaxed text-ink-secondary">
-                Who turns up, when groups meet, and who to call. Attendance panels cover the{" "}
+                Who turns up, who signs up, and who to call. Attendance panels cover the{" "}
                 {scale.nightsWithFile} of {scale.totalNights} nights with a check-in file.
               </p>
 
@@ -314,9 +320,6 @@ export default async function DashboardPage() {
                 totalNights={scale.totalNights}
               />
             )}
-
-            {/* What leaders offer against what seekers want. */}
-            <SupplyDemandPanel data={supplyDemand} />
 
             {/* Who registers. A bento of independent tiles — the component
                 owns its own panels, because the four readings no longer share

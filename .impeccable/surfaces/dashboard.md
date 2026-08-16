@@ -32,9 +32,16 @@ nothing read as leading. Do not add a third interval.
 The organiser half is a real `<section aria-labelledby>`, not a styled rule,
 so the split exists for a screen reader too.
 
-**Pastor section** (metric row · funnel · matching market · mix by sport),
-then **For organisers** (attendance by sport · supply against demand · who
+**Pastor section** (metric row · funnel · matching market · mix by sport ·
+supply against demand), then **For organisers** (attendance by sport · who
 registers · the roster table).
+
+**Supply against demand is placement, not scheduling.** It shipped below the
+divider on the reasoning that meeting times are a calendar decision; the user
+moved it back up on 2026-08-17 and is right. A seeker who cannot meet when any
+group meets is unplaceable, so the offer/want comparison answers the pastor's
+question — it is the *why* behind the matching market's headline, and the two
+now sit in the same half of the page.
 
 1. *Numbers* — four wide metric panels, each headline carrying the parts that
    make it up. Unchanged and explicitly liked; do not flatten them back into
