@@ -43,25 +43,59 @@ batch row:
    similarity above threshold) → genuinely ambiguous, routed to review. This is
    the case that catches a typo'd email or a second address for the same
    person — a human has to decide, an algorithm can't.
-3. **No match at all** → new person. Auto-inserted: new `Players` row +
+3. **No email match, but same mobile number *and* same surname** → also routed
+   to review. Added 2026-08-13, after the roster showed a class of duplicate
+   that spelling cannot reach: `Sabugo, Jm` scores 0.77 against
+   `Sabugo, Jomar`, and `Diaz, Glai` scores 0.83 against `Diaz, Glaiza` — both
+   under the threshold, and both sitting in the roster as two people.
+   Comparison is on the **last ten digits**, because the same phone is written
+   three ways in the data (`09…` 281 times, `639…` 692, bare `9…` 29).
+4. **No match at all** → new person. Auto-inserted: new `Players` row +
    `Participations` row (`is_first_participation = true`), no review needed.
 
-Only case 2 produces review-queue work. At typical weekly volume this should be
-a small fraction of the batch, not most of it — most weeks are mostly known
-players returning, and that's the case explicitly designed to need zero admin
-attention.
+**Why surname guards the mobile rule.** Nine numbers in the roster are shared
+by more than one player. All three of the pairs with *different* surnames are
+couples and housemates passing one handset around — real, distinct people. All
+six same-surname pairs are either duplicates or siblings, which is precisely
+the judgment a review card exists to collect. The guard therefore costs
+nothing and removes every measured false positive.
+
+Cases 2 and 3 produce review-queue work. Across the first 17 nights that was
+104 cards on 2,806 rows (~6 per upload), of which 99 were confirmed as the same
+person — a small fraction of the batch, as intended, and overwhelmingly a
+confirm rather than a decision. Adding case 3 would have surfaced six more.
 
 Fuzzy-match threshold is a tuning knob, not a hard spec requirement — start
 conservative (fewer false positives; missing a real duplicate occasionally is
 recoverable, since a human still owns the data) and adjust based on how noisy
-real weekly uploads turn out to be.
+real weekly uploads turn out to be. The mobile rule is deliberately **not** a
+tuning knob: it is exact-match or nothing, since a fuzzy phone number matches
+strangers.
 
 ## Feature 3: Review queue
 
-For every fuzzy-matched row: show the incoming submission next to the matched
+For every flagged row: show the incoming submission next to the matched
 `Players` candidate(s), with per-field differences visually called out. If more
 than one candidate matched, show all of them; the admin picks which one it's
 referring to (or none).
+
+Each candidate carries its **evidence**, in the same met/failed/unknown
+vocabulary the attendance queue uses:
+
+- **Mobile number**, as a verdict rather than two strings to diff, masked to
+  the last four. 1,007 of 1,080 players carry one and 998 of those are
+  distinct, so agreement is very nearly proof. Three states, never two — an
+  absent phone must never read as a phone that disagreed.
+- **Nickname**, which is often better evidence than the spelling of a legal
+  first name.
+- **Church affiliation**, the one remaining answer both records always hold.
+- **History**: nights registered, nights actually checked in at the door, last
+  seen, usual sport. Registered and came are held apart because they differ by
+  a third across the season, and a candidate with a single stray registration
+  is usually itself the mis-keyed duplicate.
+
+A candidate whose phone matches is ranked first and ringed, because the
+matcher already knows it is the near-certain one.
 
 Per row, the admin picks exactly one:
 

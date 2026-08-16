@@ -1,4 +1,11 @@
-import { normalizeEmail, normalizeName, nameSimilarity, FUZZY_MATCH_THRESHOLD } from "./fuzzy";
+import {
+  normalizeEmail,
+  normalizeName,
+  normalizeSurname,
+  nameSimilarity,
+  FUZZY_MATCH_THRESHOLD,
+} from "./fuzzy";
+import { normalizeMobile } from "./candidate-evidence";
 import type { IncomingRow, MatchOutcome, Player } from "./types";
 
 export interface MatchResult {
@@ -40,13 +47,29 @@ export function matchRowsAgainstHistory(rows: IncomingRow[], existingPlayers: Pl
     }
 
     const incomingName = normalizeName(row.firstName, row.lastName);
+    const incomingMobile = normalizeMobile(row.mobileNumber);
+    const incomingSurname = normalizeSurname(row.lastName);
+
     const candidates = existingPlayers
       .map((player) => ({
         player,
         score: nameSimilarity(incomingName, normalizeName(player.firstName, player.lastName)),
+        // Same phone AND same surname. Spelling misses a whole class of
+        // duplicate — "Sabugo, Jm" scores 0.77 against "Sabugo, Jomar",
+        // "Diaz, Glai" 0.83 against "Diaz, Glaiza" — and both sat in the
+        // roster as separate people. The surname guard is what keeps the
+        // rule off the couples and housemates who share one handset; all
+        // three such pairs measured have different surnames.
+        sharesMobile:
+          !!incomingMobile &&
+          !!incomingSurname &&
+          incomingMobile === normalizeMobile(player.mobileNumber) &&
+          incomingSurname === normalizeSurname(player.lastName),
       }))
-      .filter((c) => c.score >= FUZZY_MATCH_THRESHOLD)
-      .sort((a, b) => b.score - a.score)
+      .filter((c) => c.sharesMobile || c.score >= FUZZY_MATCH_THRESHOLD)
+      // A matching phone outranks any spelling: the reviewer should meet the
+      // near-certain candidate first, not the closest-spelled one.
+      .sort((a, b) => Number(b.sharesMobile) - Number(a.sharesMobile) || b.score - a.score)
       .slice(0, 3)
       .map((c) => c.player);
 

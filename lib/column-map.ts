@@ -8,6 +8,11 @@ export const REQUIRED_EMAIL_COLUMNS = ["Email Address", "Email Address 2"] as co
 export const COLUMN_MAP = {
   firstName: "First Name",
   lastName: "Last Name",
+  // Nickname and mobile number both have Players columns and both were
+  // missing here until 2026-08-12, so every historical row carries them in
+  // `raw` instead — see the read-through fallback in lib/store.ts.
+  nickname: "Nickname",
+  mobileNumber: "Mobile Number",
   email: "Email Address",
   emailSecondary: "Email Address 2",
   gender: "Gender",

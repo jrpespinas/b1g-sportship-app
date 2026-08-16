@@ -3,8 +3,8 @@ import { TopNav } from "@/components/nav/top-nav";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "B1G Sportship — Player Inventory",
-  description: "Weekly game night roster ingestion for B1G Sportship admins.",
+  title: "B1G Sportship",
+  description: "Discipleship and attendance for B1G Sportship game nights.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
@@ -50,8 +50,21 @@ never gated anything once the page behind it had no lock either.
 -->`,
           }}
         />
+        {/* First tab stop on every page. Visually absent until focused,
+            because the people who need it are the people who will find it by
+            tabbing. Without it a keyboard user crosses the whole top bar on
+            every navigation, and a screen-reader user had no landmark at all
+            to jump into. */}
+        <a
+          href="#main"
+          className="sr-only rounded-[5px] bg-surface px-4 py-2 text-[13px] font-medium text-ink outline-none focus-visible:not-sr-only focus-visible:absolute focus-visible:left-4 focus-visible:top-3 focus-visible:z-50 focus-visible:ring-2 focus-visible:ring-accent"
+        >
+          Skip to content
+        </a>
         <TopNav />
-        {children}
+        <main id="main" tabIndex={-1} className="flex-1 outline-none">
+          {children}
+        </main>
       </body>
     </html>
   );

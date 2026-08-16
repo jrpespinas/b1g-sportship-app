@@ -1,10 +1,11 @@
 "use client";
 
 import { useState } from "react";
+import { LayoutGrid } from "lucide-react";
 import { StackedAreaChart } from "@/components/charts/stacked-area-chart";
 import { Panel, PanelHeader, SegmentMixBar } from "@/components/dashboard/panel";
 import { clsx } from "@/lib/clsx";
-import { DGROUP_SEGMENTS, type DGroupSegment } from "@/lib/dgroup";
+import { DGROUP_SEGMENTS, isUnplaced, type DGroupSegment } from "@/lib/dgroup";
 
 export interface SportFacet {
   sport: string;
@@ -14,10 +15,27 @@ export interface SportFacet {
 }
 
 /**
+ * The third option is the accessibility path, not a convenience. Compact
+ * charts hide their own "View as table" button, so without this the small
+ * multiples had no table twin — and a tooltip must never be the only way to
+ * read a value. One switch turns all six facets at once.
+ */
+const VIEWS = [
+  { id: "count", label: "Count" },
+  { id: "share", label: "Ratio" },
+  { id: "table", label: "Table" },
+] as const;
+
+type FacetView = (typeof VIEWS)[number]["id"];
+
+/**
  * Small multiples, one per sport, with a single shared legend and one shared
  * count/share switch.
  *
- * "Share" is the question the ministry actually asks of a sport — not how
+ * Total first, then alphabetically — the same order the attendance panel
+ * uses, so the two can be read against each other position by position.
+ *
+ * "Ratio" is the question the ministry actually asks of a sport — not how
  * many uninvolved people came, which mostly tracks how popular the sport is,
  * but what fraction of that room was uninvolved. Counts and shares answer
  * different questions off the same bands, so they are a toggle rather than
@@ -26,17 +44,27 @@ export interface SportFacet {
 export function SportMixPanel({
   facets,
   segmentColor,
+  coverage,
 }: {
   facets: SportFacet[];
   segmentColor: Record<DGroupSegment, string>;
+  /**
+   * Share of attendances carrying their own answer. Mandatory, not optional
+   * garnish: below full coverage the historical composition is substantially
+   * today's status painted backwards, and a reader who does not know that
+   * will read an inference as a measurement.
+   */
+  coverage: number;
 }) {
-  const [mode, setMode] = useState<"count" | "share">("count");
+  const [view, setView] = useState<FacetView>("count");
+  const mode = view === "table" ? "count" : view;
 
   return (
     <Panel className="mt-3">
       <PanelHeader
         title="Discipleship mix by sport"
-        subtitle="Which sports reach people who are not yet in a group — the rooms worth showing up to."
+        icon={LayoutGrid}
+        subtitle={`${Math.round(coverage * 100)}% answered on the night they came`}
         action={
           <div className="flex flex-wrap items-center justify-end gap-3">
             {/* Wraps rather than hides on narrow screens — it is the only key
@@ -56,20 +84,20 @@ export function SportMixPanel({
             <div
               className="flex shrink-0 rounded-[7px] border border-border-strong p-0.5"
               role="group"
-              aria-label="Chart scale"
+              aria-label="Discipleship mix scale"
             >
-              {(["count", "share"] as const).map((m) => (
+              {VIEWS.map((v) => (
                 <button
-                  key={m}
+                  key={v.id}
                   type="button"
-                  onClick={() => setMode(m)}
-                  aria-pressed={mode === m}
+                  onClick={() => setView(v.id)}
+                  aria-pressed={view === v.id}
                   className={clsx(
-                    "rounded-[5px] px-2 py-1 text-[12px] font-medium outline-none transition-colors focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1 focus-visible:ring-offset-surface",
-                    mode === m ? "bg-surface-subtle text-ink" : "text-ink-secondary hover:text-ink",
+                    "rounded-[5px] px-2 py-1 text-[12px] font-medium outline-none transition-colors focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1 focus-visible:ring-offset-surface pointer-coarse:min-h-11 pointer-coarse:px-3",
+                    view === v.id ? "bg-surface-subtle text-ink" : "text-ink-secondary hover:text-ink",
                   )}
                 >
-                  {m === "count" ? "Count" : "Share"}
+                  {v.label}
                 </button>
               ))}
             </div>
@@ -79,7 +107,10 @@ export function SportMixPanel({
 
       <div className="grid grid-cols-1 gap-x-5 gap-y-6 p-5 sm:grid-cols-2 xl:grid-cols-3">
         {facets.map((facet) => {
-          const notInGroup = facet.allTimeCounts.Seekers + facet.allTimeCounts["Not involved"];
+          const notInGroup = DGROUP_SEGMENTS.filter(isUnplaced).reduce(
+            (sum, segment) => sum + (facet.allTimeCounts[segment] ?? 0),
+            0,
+          );
           const share = facet.total > 0 ? Math.round((notInGroup / facet.total) * 100) : 0;
           return (
             <div key={facet.sport}>
@@ -117,6 +148,7 @@ export function SportMixPanel({
                     values: facet.points.map((p) => p.counts[segment]),
                   }))}
                   mode={mode}
+                  asTable={view === "table"}
                   height={150}
                   compact
                   hideLegend

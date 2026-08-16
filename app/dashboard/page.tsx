@@ -1,312 +1,333 @@
-import Link from "next/link";
-import { AlertTriangle, ArrowRight } from "lucide-react";
+import {
+  AlertTriangle,
+  Layers,
+  Sprout,
+} from "lucide-react";
 import { Panel, PanelHeader, MetricPanel } from "@/components/dashboard/panel";
-import { TrendLineChart } from "@/components/charts/line-chart";
-import { StackedAreaChart } from "@/components/charts/stacked-area-chart";
+import { WhoRegisters } from "@/components/dashboard/who-registers";
+import { LeadershipPipelinePanel } from "@/components/dashboard/leadership-pipeline";
+import { MatchingMarketPanel } from "@/components/dashboard/matching-market";
+import { MoversList } from "@/components/dashboard/movers-list";
+import { RosterTable } from "@/components/dashboard/roster-table";
+import { SupplyDemandPanel } from "@/components/dashboard/supply-demand-panel";
+import { DiscipleshipFunnel } from "@/components/charts/discipleship-funnel";
 import { SportMixPanel } from "@/components/dashboard/sport-mix-panel";
-import { Leaderboard } from "@/components/dashboard/leaderboard";
-import { DGROUP_SEGMENTS, type DGroupSegment } from "@/lib/dgroup";
+import { ShowUpBySportPanel } from "@/components/dashboard/show-up-by-sport-panel";
+import type { DGroupSegment } from "@/lib/dgroup";
+import { formatDate, formatDateWithYear } from "@/lib/format-date";
+import { getSupplyDemand } from "@/lib/supply-demand";
 import {
   getDashboardData,
-  getGenderBreakdown,
   getLatestGameNight,
-  getLeadershipCapacity,
+  getAttendanceScale,
+  getCaptureGaps,
+  getRegistrationDemographics,
+  getLeadershipPipeline,
+  getGenderBreakdown,
+  getMatchingMarket,
+  getMovers,
   getParticipantsForGameNight,
   getPointInTimeCoverage,
-  getReturneeFirstTimerTimeSeries,
+  getDiscipleshipFunnel,
+  getLeadershipCapacity,
+  getRosterViews,
   getSegmentBreakdown,
   getSegmentMixBySport,
   getSegmentSeriesBySport,
-  getSegmentTimeSeries,
-  getTopReturningPlayers,
+  getShowUpSeriesBySport,
   getTotalUniqueParticipants,
+  type FunnelStage,
 } from "@/lib/dashboard-metrics";
 
-// Reads live off the Sheet on every request — this dashboard has no cache to
-// invalidate, per docs/spec/03-dashboard.md's on-demand refresh strategy.
+// Rendered per request, but the Sheets reads behind it are cached for five
+// minutes and dropped on upload (`lib/sheets.ts`). That is the spec's
+// "on-demand refresh or a coarse periodic revalidation" read literally: the
+// page is never stale after a write, and a burst of views costs one
+// round-trip instead of one each.
 export const dynamic = "force-dynamic";
 
+/**
+ * Blue for depth of involvement, orange for the two ends that are not a
+ * position — nobody recorded, and nobody involved. Both ramps run in the same
+ * direction as the funnel itself.
+ */
 const SEGMENT_COLOR: Record<DGroupSegment, string> = {
-  Leaders: "var(--color-seg-leaders)",
-  Members: "var(--color-seg-members)",
+  Leaders: "var(--color-blue-6)",
+  Members: "var(--color-blue-4)",
   Seekers: "var(--color-seg-seekers)",
   "Not involved": "var(--color-seg-uninvolved)",
+  "Not recorded": "var(--color-seg-unrecorded)",
 };
 
-// The directory's filter speaks the five-way category; these are the segments
-// that map to it cleanly, so a figure only links out when the list behind it
-// is genuinely the same set of people.
-const SEGMENT_FILTER: Partial<Record<DGroupSegment, string>> = {
-  Members: "DGroup Member",
-  Seekers: "Seeking",
-  "Not involved": "Not involved",
-};
+const segmentHref = (segment: DGroupSegment) => `/players?segment=${encodeURIComponent(segment)}`;
 
-function formatDate(iso: string): string {
-  return new Date(`${iso}T00:00:00`).toLocaleDateString("en-US", { month: "short", day: "numeric" });
-}
+/**
+ * Every stage links to exactly the people it counted, by category rather than
+ * by segment — "Leaders" spans two stages, so a row reading "D12 · 53" would
+ * otherwise land on 187 names. The unrecorded stage links too: those 72 are
+ * the most actionable list on the page, because the follow-up is simply to go
+ * and ask them.
+ */
+const funnelHref = (stage: FunnelStage) =>
+  `/players?category=${encodeURIComponent(stage.category)}`;
 
+/**
+ * One panel per question, season-to-date.
+ *
+ * The page is a view, not a report: findings live in the marks and in the
+ * chips beside them, never in a paragraph. Each panel carries its title plus
+ * at most a short unit or population label — and only where its absence would
+ * let a figure be read as something it is not.
+ */
 export default async function DashboardPage() {
   const data = await getDashboardData();
 
   const latestGameNight = getLatestGameNight(data);
   const totalUnique = getTotalUniqueParticipants(data);
-  const gender = getGenderBreakdown(data);
-  const genderOf = (g: string) => gender.find((x) => x.gender === g)?.count ?? 0;
-
   const segments = getSegmentBreakdown(data);
   const segmentOf = (s: DGroupSegment) => segments.find((x) => x.segment === s)?.count ?? 0;
-  const capacity = getLeadershipCapacity(data);
 
-  const returneeSeries = getReturneeFirstTimerTimeSeries(data);
-  const segmentSeries = getSegmentTimeSeries(data);
+  const capacity = getLeadershipCapacity(data);
+  const scale = getAttendanceScale(data);
+  const captureGaps = getCaptureGaps(data);
+  const coverage = getPointInTimeCoverage(data);
+
+  // The season's own year, so an age never shifts because the page was
+  // opened in January.
+  const seasonYear = Number(latestGameNight?.gameNightDate.slice(0, 4)) || new Date().getFullYear();
+  const demographics = getRegistrationDemographics(data, seasonYear);
+  const pipeline = getLeadershipPipeline(data);
+  const funnel = getDiscipleshipFunnel(data);
+  const market = getMatchingMarket(data);
+  const movement = getMovers(data);
+  const supplyDemand = getSupplyDemand(data.players);
+  const roster = getRosterViews(data);
+
+  const showUpBySport = getShowUpSeriesBySport(data);
   const sportSeries = getSegmentSeriesBySport(data);
   const sportMix = getSegmentMixBySport(data);
-  const coverage = getPointInTimeCoverage(data);
-  const topPlayers = getTopReturningPlayers(data, 12);
 
-  const hasAnyGameNight = !!latestGameNight;
+  const genderStats = getGenderBreakdown(data)
+    .sort((a, b) => b.count - a.count)
+    .map((g) => ({ label: g.gender.toLowerCase(), value: g.count }));
   const weeklyCount = latestGameNight
     ? getParticipantsForGameNight(data, latestGameNight.gameNightId).length
     : 0;
 
-  const notInAGroup = segmentOf("Seekers") + segmentOf("Not involved");
-  const uninvolvedShare = totalUnique > 0 ? Math.round((segmentOf("Not involved") / totalUnique) * 100) : 0;
-
-  const bandsFor = (points: { counts: Record<DGroupSegment, number> }[]) =>
-    DGROUP_SEGMENTS.map((segment) => ({
-      key: segment,
-      label: segment,
-      color: SEGMENT_COLOR[segment],
-      values: points.map((p) => p.counts[segment]),
-    }));
+  const hasAnyGameNight = !!latestGameNight;
+  const hasAttendance = scale.nightsWithFile > 0;
+  // Everyone the ministry has not placed, however they got there: asked and
+  // seeking, asked and declined, or never asked at all.
+  const unplaced =
+    segmentOf("Seekers") + segmentOf("Not involved") + segmentOf("Not recorded");
+  const unrecorded = funnel.find((s) => s.unrecorded)?.count ?? 0;
 
   return (
     <div className="min-h-screen bg-page">
       <div className="mx-auto w-full max-w-[1280px] px-6 py-8">
-        <header>
-          <h1 className="text-[24px] font-semibold tracking-[-0.02em] text-ink">Discipleship health</h1>
-          <p className="mt-1.5 text-[14px] leading-relaxed text-ink-secondary">
-            {hasAnyGameNight ? (
-              <>
-                <span className="font-semibold text-ink">{segmentOf("Not involved").toLocaleString()}</span> of{" "}
-                {totalUnique.toLocaleString()} players — {uninvolvedShare}% — are in no group and have not asked to
-                join one. Season to date, through {formatDate(latestGameNight!.gameNightDate)}.
-              </>
-            ) : (
-              "No game nights uploaded yet — this fills in as soon as the first roster lands."
-            )}
+        <header className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+          <h1 className="text-[24px] font-semibold tracking-[-0.02em] text-ink">Discipleship Overview</h1>
+          <p className="text-[13px] text-ink-secondary">
+            {hasAnyGameNight
+              ? `${scale.totalNights} game nights · through ${formatDateWithYear(latestGameNight!.gameNightDate)}`
+              : "No game nights uploaded yet"}
           </p>
         </header>
 
-        {hasAnyGameNight && coverage.covered < coverage.nights && (
-          <Panel className="mt-5 border-accent bg-accent-tint p-4">
+        {hasAnyGameNight && captureGaps.length > 0 && (
+          <Panel emphasis className="mt-5 bg-accent-tint p-4">
             <div className="flex gap-3">
               <AlertTriangle className="mt-0.5 size-4 shrink-0 text-accent-ink" strokeWidth={2} aria-hidden />
-              <div className="min-w-0">
-                <div className="text-[13px] font-semibold text-ink">
-                  Segment history is inferred, not measured, for {coverage.nights - coverage.covered} of{" "}
-                  {coverage.nights} game nights.
-                </div>
-                <p className="mt-1 text-[12px] leading-relaxed text-ink-secondary">
-                  Those nights were uploaded before each night&apos;s own discipleship answers were kept, so the
-                  charts below apply each player&apos;s <em>latest</em> status backwards. Someone who joined a group
-                  in June therefore reads as a member in February too. Totals on this page are correct; the
-                  per-night <em>shape</em> is an estimate until the past exports are re-uploaded.
-                </p>
+              <div className="min-w-0 text-[13px]">
+                <span className="font-semibold text-ink">
+                  No discipleship answers captured for {captureGaps.length}{" "}
+                  {captureGaps.length === 1 ? "night" : "nights"}
+                </span>
+                <span className="text-ink-secondary">
+                  {" "}
+                  — {captureGaps.map((g) => formatDate(g.date)).join(", ")}. Re-upload those exports to fix.
+                </span>
               </div>
             </div>
           </Panel>
         )}
 
         {!hasAnyGameNight ? (
-          <Panel className="mt-6 flex h-[240px] items-center justify-center border-dashed p-5 text-center text-[14px] text-ink-secondary">
+          <Panel className="mt-6 flex h-[240px] items-center justify-center border-dashed p-5 text-center text-[13px] text-ink-secondary">
             Nothing to show yet. Upload this week&apos;s roster to get started.
           </Panel>
         ) : (
           <>
+            {/* ── Where people stand ──────────────────────────────────
+                Four wide panels rather than six narrow ones. Each headline
+                carries the parts that make it up, so a figure can be checked
+                against its own composition without leaving the tile — a bare
+                number invites the wrong read, and these are read by someone
+                deciding who to talk to next.
+
+                Ordered placement-first as of 2026-08-16. The two discipleship
+                figures lead because they are the page's question; roster size
+                is the denominator they are read against, and attendance is the
+                organiser's number, so it trails rather than opens. */}
             <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+              <MetricPanel
+                label="Not in a group"
+                value={unplaced}
+                subStats={[
+                  { label: "seeking", value: segmentOf("Seekers"), color: SEGMENT_COLOR.Seekers },
+                  {
+                    label: "asked, not involved",
+                    value: segmentOf("Not involved"),
+                    color: SEGMENT_COLOR["Not involved"],
+                  },
+                  {
+                    label: "never asked",
+                    value: segmentOf("Not recorded"),
+                    color: SEGMENT_COLOR["Not recorded"],
+                  },
+                ]}
+                note="Seekers asked for a group. The rest either declined or were never asked — a different follow-up each."
+                href={segmentHref("Not recorded")}
+                hrefLabel="Who has never been asked"
+              />
+
+
+              <MetricPanel
+                label="Discipleship group leaders"
+                value={capacity.leaders}
+                subStats={[
+                  { label: "lead a group", value: capacity.dgroupLeaders },
+                  { label: "D12 — lead leaders", value: capacity.d12 },
+                ]}
+                note={`${capacity.willingToAbsorb} of them said they are willing to absorb new members.`}
+                href={segmentHref("Leaders")}
+                hrefLabel="Who they are"
+              />
+
+
               <MetricPanel
                 label="Unique participants"
                 value={totalUnique}
-                subStats={[
-                  { label: "male", value: genderOf("Male") },
-                  { label: "female", value: genderOf("Female") },
-                  { label: "unspecified", value: genderOf("Unspecified") },
-                ]}
-                note={`Everyone who has attended at least once. ${weeklyCount} came on ${formatDate(
-                  latestGameNight!.gameNightDate,
-                )}.`}
+                subStats={genderStats}
+                note={
+                  hasAnyGameNight
+                    ? `Everyone who has registered at least once. ${weeklyCount} registered for ${formatDate(latestGameNight!.gameNightDate)}.`
+                    : undefined
+                }
+                href="/players"
+                hrefLabel="Player directory"
               />
+
+
               <MetricPanel
-                label="DGroup leaders"
-                value={capacity.leaders}
-                subStats={[
-                  { label: "DLeaders", value: capacity.dgroupLeaders },
-                  { label: "D12", value: capacity.d12 },
-                ]}
-                note={`${capacity.willingToAbsorb} of them said they are willing to absorb new members.`}
+                label={hasAttendance ? "Attended at least once" : "Registered at least once"}
+                value={hasAttendance ? scale.uniqueCame : scale.uniqueRegistered}
+                subStats={
+                  hasAttendance
+                    ? [
+                        { label: "typical night", value: scale.typicalNight },
+                        { label: "show-up rate", value: `${Math.round(scale.showUpRate * 100)}%` },
+                      ]
+                    : undefined
+                }
+                note={
+                  hasAttendance
+                    ? `${scale.neverCame} registered at some point and never once walked in. Covers the ${scale.nightsWithFile} of ${scale.totalNights} nights with a check-in file.`
+                    : undefined
+                }
               />
-              <MetricPanel
-                label="DGroup members"
-                value={segmentOf("Members")}
-                subStats={[{ label: "of all players", value: `${Math.round((segmentOf("Members") / totalUnique) * 100)}%` }]}
-                note="In a group but not leading one — the pool to invite into leadership."
-                href={`/players?dgroup=${encodeURIComponent(SEGMENT_FILTER.Members!)}`}
-                hrefLabel="Who they are"
-              />
-              <MetricPanel
-                label="Not in a group"
-                value={notInAGroup}
-                subStats={[
-                  { label: "seeking", value: segmentOf("Seekers"), color: SEGMENT_COLOR.Seekers },
-                  { label: "not involved", value: segmentOf("Not involved"), color: SEGMENT_COLOR["Not involved"] },
-                ]}
-                note="Seekers raised their hand. The rest have not been asked."
-                href={`/players?dgroup=${encodeURIComponent(SEGMENT_FILTER["Not involved"]!)}`}
-                hrefLabel="Who has not been asked"
-              />
+
             </div>
 
-            {/* The matching market — the one number that says where the work is. */}
-            <Panel className="mt-3">
-              <PanelHeader
-                title="Placing seekers"
-                subtitle="Seekers are people asking for a group. Capacity is leaders who said they can take someone."
-              />
-              <div className="grid grid-cols-1 gap-5 p-5 lg:grid-cols-[auto_1fr]">
-                <div className="flex items-center gap-6">
-                  <div>
-                    <div className="text-[12px] font-medium text-ink-secondary">Seeking</div>
-                    <div className="mt-1 text-[34px] font-semibold leading-none tracking-[-0.02em] text-ink">
-                      {capacity.seekers}
-                    </div>
-                    <Link
-                      href={`/players?dgroup=${encodeURIComponent(SEGMENT_FILTER.Seekers!)}`}
-                      className="mt-2 inline-flex items-center gap-1 rounded-[5px] text-[12px] font-medium text-accent-ink underline decoration-accent/40 underline-offset-2 outline-none hover:decoration-accent focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
-                    >
-                      Match them
-                      <ArrowRight className="size-3" strokeWidth={2.5} aria-hidden />
-                    </Link>
-                  </div>
-                  <div className="text-[20px] text-ink-secondary" aria-hidden>
-                    ↔
-                  </div>
-                  <div>
-                    <div className="text-[12px] font-medium text-ink-secondary">Willing to absorb</div>
-                    <div className="mt-1 text-[34px] font-semibold leading-none tracking-[-0.02em] text-ink">
-                      {capacity.willingToAbsorb}
-                    </div>
-                    <div className="mt-2 text-[12px] text-ink-secondary">
-                      of {capacity.leaders} leaders
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex items-center border-t border-border pt-5 lg:border-l lg:border-t-0 lg:pl-6 lg:pt-0">
-                  <p className="text-[13px] leading-relaxed text-ink-secondary">
-                    {capacity.surplus > 0 ? (
-                      <>
-                        There is room for{" "}
-                        <span className="font-semibold text-ink">{capacity.surplus} more</span> seekers than are
-                        currently asking. Capacity is not the constraint — the{" "}
-                        <span className="font-semibold text-ink">{segmentOf("Not involved").toLocaleString()}</span>{" "}
-                        players who have not asked at all are. Every one of them is a conversation nobody has had
-                        yet.
-                      </>
-                    ) : capacity.surplus < 0 ? (
-                      <>
-                        Seekers outnumber available leaders by{" "}
-                        <span className="font-semibold text-ink">{Math.abs(capacity.surplus)}</span>. Growing
-                        leaders is the constraint — start with the{" "}
-                        <span className="font-semibold text-ink">{segmentOf("Members").toLocaleString()}</span>{" "}
-                        members already in a group.
-                      </>
-                    ) : (
-                      <>Seekers and available leaders are exactly matched at {capacity.seekers}.</>
-                    )}
-                  </p>
-                </div>
-              </div>
-            </Panel>
-
-            <div className="mt-3 grid grid-cols-1 gap-3 lg:grid-cols-2">
-              <Panel>
+            {/* Where everyone stands, and who moved. The movers sit beside the
+                funnel rather than in their own panel: fifteen names are the
+                movement story, and separating them from the standing they
+                moved within would leave both halves unreadable. */}
+            <div className="mt-3 grid grid-cols-1 items-start gap-3 lg:grid-cols-3">
+              <Panel className="lg:col-span-2">
                 <PanelHeader
-                  title="Who is showing up"
-                  subtitle="Returnees against first-timers, every game night this season."
+                  title="Where everyone stands"
+                  icon={Layers}
+                  subtitle={`Of ${totalUnique.toLocaleString()} players`}
+                  action={
+                    unrecorded > 0 ? (
+                      <span className="rounded-[5px] bg-surface-subtle px-2 py-1 text-[12px] font-medium tabular-nums text-ink-secondary">
+                        {Math.round((unrecorded / totalUnique) * 100)}% unrecorded
+                      </span>
+                    ) : undefined
+                  }
                 />
-                <div className="p-5">
-                  <TrendLineChart
-                    categories={returneeSeries.map((s) => s.gameNightId)}
-                    categoryLabels={returneeSeries.map((s) => formatDate(s.date))}
-                    series={[
-                      {
-                        key: "returnees",
-                        label: "Returnees",
-                        color: "var(--color-series-returnee)",
-                        values: returneeSeries.map((s) => s.returnees),
-                      },
-                      {
-                        key: "firstTimers",
-                        label: "First-timers",
-                        color: "var(--color-series-firsttimer)",
-                        values: returneeSeries.map((s) => s.firstTimers),
-                      },
-                    ]}
-                  />
+                <div className="grid grid-cols-1 divide-y divide-border lg:grid-cols-2 lg:divide-x lg:divide-y-0">
+                  <DiscipleshipFunnel stages={funnel} hrefFor={funnelHref} />
+                  <MoversList report={movement} />
                 </div>
               </Panel>
 
               <Panel>
-                <PanelHeader
-                  title="Discipleship mix of attendance"
-                  subtitle="Where the room sits on the pipeline, night by night. Darker is deeper involvement."
-                />
-                <div className="p-5">
-                  <StackedAreaChart
-                    title="Discipleship segments per game night"
-                    categoryLabel="Game night"
-                    categories={segmentSeries.map((s) => s.gameNightId)}
-                    categoryLabels={segmentSeries.map((s) => formatDate(s.date))}
-                    bands={bandsFor(segmentSeries)}
-                  />
-                </div>
+                <PanelHeader title="Heading toward leading" icon={Sprout} subtitle="Self-reported intent" />
+                <LeadershipPipelinePanel pipeline={pipeline} />
               </Panel>
             </div>
+
+            {/* Can the people asking be placed. */}
+            <MatchingMarketPanel market={market} />
 
             <SportMixPanel
-              segmentColor={SEGMENT_COLOR}
+              coverage={coverage.share}
               facets={sportSeries.map((s) => ({
                 sport: s.sport,
-                total: s.total,
+                total: sportMix.find((m) => m.sport === s.sport)?.total ?? s.total,
                 allTimeCounts:
                   sportMix.find((m) => m.sport === s.sport)?.counts ??
-                  (Object.fromEntries(DGROUP_SEGMENTS.map((seg) => [seg, 0])) as Record<DGroupSegment, number>),
+                  ({} as Record<DGroupSegment, number>),
                 points: s.points.map((p) => ({
                   gameNightId: p.gameNightId,
                   label: formatDate(p.date),
                   counts: p.counts,
                 })),
               }))}
+              segmentColor={SEGMENT_COLOR}
             />
 
-            <Panel className="mt-3">
-              <PanelHeader
-                title="Most committed players"
-                subtitle="Ranked by nights attended. The ones showing up most who are still in no group are the warmest conversations available."
-                action={
-                  <Link
-                    href="/players"
-                    className="inline-flex items-center gap-1 rounded-[5px] text-[12px] font-medium text-accent-ink underline decoration-accent/40 underline-offset-2 outline-none hover:decoration-accent focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
-                  >
-                    All players
-                    <ArrowRight className="size-3" strokeWidth={2.5} aria-hidden />
-                  </Link>
-                }
+            {/* ── The subject changes here ───────────────────────────────
+                The one generous interval on the page. Everything above is read
+                quarterly and answers where people stand; everything below is
+                read every four nights by whoever runs the night. Thirty-two
+                pixels above the heading against twelve below it, so the break
+                reads as a break rather than as another panel gap. */}
+            <section aria-labelledby="organiser-section" className="mt-8 border-t border-border pt-5">
+              <h2
+                id="organiser-section"
+                className="text-[15px] font-semibold tracking-[-0.01em] text-ink"
+              >
+                For organisers
+              </h2>
+              <p className="mt-1 text-[13px] leading-relaxed text-ink-secondary">
+                Who turns up, when groups meet, and who to call. Attendance panels cover the{" "}
+                {scale.nightsWithFile} of {scale.totalNights} nights with a check-in file.
+              </p>
+
+            {hasAttendance && showUpBySport.length > 0 && (
+              <ShowUpBySportPanel
+                series={showUpBySport}
+                nightsWithFile={scale.nightsWithFile}
+                totalNights={scale.totalNights}
               />
-              <Leaderboard players={topPlayers} />
-            </Panel>
+            )}
+
+            {/* What leaders offer against what seekers want. */}
+            <SupplyDemandPanel data={supplyDemand} />
+
+            {/* Who registers. A bento of independent tiles — the component
+                owns its own panels, because the four readings no longer share
+                a question and should not share a container. */}
+            <WhoRegisters demographics={demographics} />
+
+              {/* The coverage caveat used to live under every panel it
+                  qualified. It now opens this section, where a reader meets it
+                  before the charts rather than after them. */}
+              <RosterTable views={roster} />
+            </section>
           </>
         )}
       </div>

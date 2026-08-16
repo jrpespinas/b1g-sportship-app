@@ -12,6 +12,23 @@ export function normalizeName(firstName: string, lastName: string): string {
     .trim();
 }
 
+/**
+ * The surname alone, folded the same way `normalizeName` folds a full name.
+ *
+ * Used as a guard on the mobile-number rule: three of the nine shared numbers
+ * in the roster belong to couples and friends passing one phone around, and
+ * every one of those pairs has a different surname.
+ */
+export function normalizeSurname(lastName: string): string {
+  return lastName
+    .toLowerCase()
+    .normalize("NFKD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-z ]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 /** Levenshtein distance, small-string implementation (names only). */
 function levenshtein(a: string, b: string): number {
   const dp: number[][] = Array.from({ length: a.length + 1 }, (_, i) =>

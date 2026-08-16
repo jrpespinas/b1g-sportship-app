@@ -7,14 +7,25 @@ import {
   Calendar,
   Check,
   FileSpreadsheet,
+  // `History` is also a DOM lib global, and the global wins at the use site.
+  History as HistoryIcon,
   RotateCcw,
   SkipForward,
   UserPlus,
   Users,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, StatCard } from "@/components/ui/card";
+import { Panel } from "@/components/ui/panel";
+import { Signal, SignalList } from "@/components/ui/signal";
+import { MetricPanel } from "@/components/dashboard/panel";
 import { Badge } from "@/components/ui/badge";
+import { displayNickname, formatNameNatural } from "@/lib/player-name";
+import {
+  compareMobile,
+  maskMobile,
+  type MobileVerdict,
+  type PlayerHistory,
+} from "@/lib/candidate-evidence";
 import {
   commitBatch,
   parseAndMatch,
@@ -147,7 +158,8 @@ export function UploadFlow() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-[640px] px-6 py-16 sm:py-20">
+    <div className="min-h-screen bg-page">
+      <div className="mx-auto w-full max-w-[1280px] px-6 py-8">
       {step === "select" && (
         <SelectStep
           file={file}
@@ -166,6 +178,7 @@ export function UploadFlow() {
       {step === "triage" && currentAmbiguous && (
         <TriageStep
           item={currentAmbiguous}
+          histories={matchResult?.histories ?? {}}
           index={triageIndex}
           total={ambiguousQueue.length}
           isPending={isPending}
@@ -188,7 +201,8 @@ export function UploadFlow() {
 
       {step === "summary" && summary && matchResult && (
         <SummaryStep summary={summary} matchResult={matchResult} onReset={reset} />
-      )}
+        )}
+      </div>
     </div>
   );
 }
@@ -219,18 +233,18 @@ function SelectStep({
   const [isDragOver, setIsDragOver] = useState(false);
 
   return (
-    <div className="animate-[fadeIn_0.2s_ease-out]">
-      <h1 className="text-[26px] font-semibold tracking-[-0.02em] text-ink">
+    <div>
+      <h1 className="text-[24px] font-semibold tracking-[-0.02em] text-ink">
         Upload this week&apos;s roster
       </h1>
-      <p className="mt-2 text-[15px] leading-relaxed text-ink-secondary">
+      <p className="mt-2 text-[13px] leading-relaxed text-ink-secondary">
         Select the game night export and confirm the date. Known players are matched
         automatically — you&apos;ll only be asked about the ones we can&apos;t place with confidence.
       </p>
 
-      <Card
-        className={`mt-8 flex cursor-pointer flex-col items-center justify-center gap-3 border-dashed px-6 py-12 text-center transition-colors duration-150 ${
-          isDragOver ? "border-accent bg-accent-tint" : "hover:border-border-strong"
+      <div
+        className={`mt-5 flex cursor-pointer flex-col items-center justify-center gap-3 rounded-xl border border-dashed bg-surface px-6 py-12 text-center transition-colors duration-150 ${
+          isDragOver ? "border-accent bg-accent-tint" : "border-border hover:border-border-strong"
         }`}
         onClick={() => fileInputRef.current?.click()}
         onDragOver={(e) => {
@@ -268,7 +282,7 @@ function SelectStep({
             <div className="mt-0.5 text-[13px] text-ink-tertiary">or click to browse</div>
           </div>
         )}
-      </Card>
+      </div>
 
       {error && (
         <div className="mt-4 flex items-start gap-2.5 rounded-xl bg-danger-tint px-4 py-3 text-[13px] text-danger">
@@ -298,7 +312,7 @@ function SelectStep({
             type="date"
             value={gameNightDate}
             onChange={(e) => setGameNightDate(e.target.value)}
-            className="w-full rounded-[10px] border border-border-strong bg-surface px-3 py-2 text-[15px] text-ink outline-none focus-visible:ring-2 focus-visible:ring-accent"
+            className="w-full rounded-[10px] border border-border-strong bg-surface px-3 py-2 text-[13px] text-ink outline-none focus-visible:ring-2 focus-visible:ring-accent"
           />
         </label>
         <label className="block">
@@ -310,13 +324,13 @@ function SelectStep({
             value={uploadedBy}
             onChange={(e) => setUploadedBy(e.target.value)}
             placeholder="Admin"
-            className="w-full rounded-[10px] border border-border-strong bg-surface px-3 py-2 text-[15px] text-ink outline-none placeholder:text-ink-tertiary focus-visible:ring-2 focus-visible:ring-accent"
+            className="w-full rounded-[10px] border border-border-strong bg-surface px-3 py-2 text-[13px] text-ink outline-none placeholder:text-ink-tertiary focus-visible:ring-2 focus-visible:ring-accent"
           />
         </label>
       </div>
 
       <Button
-        className="mt-8 w-full"
+        className="mt-5"
         disabled={!file || isPending}
         onClick={onSubmit}
       >
@@ -325,10 +339,6 @@ function SelectStep({
       </Button>
     </div>
   );
-}
-
-function displayName(row: { firstName: string; lastName: string }) {
-  return `${row.firstName} ${row.lastName}`.trim();
 }
 
 function wordDiffers(a: string, b: string): boolean {
@@ -367,20 +377,102 @@ function Kbd({ children }: { children: React.ReactNode }) {
   );
 }
 
+/**
+ * A dot-separated meta line whose separators travel with the segment that
+ * follows them, so a wrap at 390px cannot strand a "·" at the end of a line.
+ */
+function MetaLine({ parts }: { parts: Array<string | false | undefined> }) {
+  const kept = parts.filter((part): part is string => !!part);
+  return (
+    <div className="mt-1 flex flex-wrap gap-y-1 text-[13px] text-ink-secondary">
+      {kept.map((part, i) => (
+        <span key={part}>
+          {i > 0 && <span className="mx-2 text-ink-tertiary">·</span>}
+          {part}
+        </span>
+      ))}
+    </div>
+  );
+}
+
+/**
+ * How often this person has turned up, in one line.
+ *
+ * Registered and came are held apart because they differ by a third across
+ * the season, and the difference is exactly what tells an established regular
+ * from a single stray row — and a single stray row is usually the mis-keyed
+ * duplicate you are being asked about.
+ */
+function HistoryLine({ history }: { history?: PlayerHistory }) {
+  if (!history || history.nightsRegistered === 0) {
+    return (
+      <div className="mt-2 text-[12px] text-ink-tertiary">No nights on record for this player.</div>
+    );
+  }
+
+  const nights = `${history.nightsRegistered} ${history.nightsRegistered === 1 ? "night" : "nights"} registered`;
+  const came =
+    history.nightsAttended > 0
+      ? `came to ${history.nightsAttended}`
+      : "never checked in at the door";
+
+  const rest = [came, history.lastRegisteredDate && `last ${history.lastRegisteredDate}`, history.frequentSport]
+    .filter((part): part is string => !!part);
+
+  return (
+    <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[12px] text-ink-secondary">
+      <HistoryIcon className="size-3 shrink-0 text-ink-tertiary" strokeWidth={2} aria-hidden />
+      <span className="tabular-nums text-ink">{nights}</span>
+      {/* Each separator travels with the segment that follows it, so a wrap
+          at 390px cannot leave a "·" stranded at the end of a line. */}
+      {rest.map((part) => (
+        <span key={part} className="tabular-nums">
+          <span className="mr-2 text-ink-tertiary">·</span>
+          {part}
+        </span>
+      ))}
+    </div>
+  );
+}
+
+/**
+ * The phone line, stated as a verdict rather than as two numbers to compare.
+ *
+ * Mobile is the strongest identity signal the roster carries: 1,007 of 1,080
+ * players have one and 998 of those are distinct, so a match is very nearly
+ * proof and a mismatch very nearly refutation. Making the reader diff two
+ * eleven-digit strings themselves would waste that.
+ *
+ * Masked to the last four. The reviewer needs to know whether the numbers
+ * agree, which the verdict already says; printing the rest would put a
+ * thousand phone numbers on screen to answer a yes/no question.
+ */
+function MobileSignal({ verdict, masked }: { verdict: MobileVerdict; masked?: string }) {
+  if (verdict === "same") return <Signal state="met">Same mobile number {masked}</Signal>;
+  if (verdict === "differs") return <Signal state="failed">Different mobile number {masked}</Signal>;
+  return <Signal state="unknown">No mobile number to compare</Signal>;
+}
+
 function TriageStep({
   item,
+  histories,
   index,
   total,
   isPending,
   onResolve,
 }: {
   item: AmbiguousItem;
+  histories: Record<string, PlayerHistory>;
   index: number;
   total: number;
   isPending: boolean;
   onResolve: (action: ReviewAction) => void;
 }) {
   const primaryCandidate = item.candidates[0];
+  // The matcher ranks a phone match above any spelling, so if one is on this
+  // card at all it is the first candidate.
+  const mobileFlagged =
+    !!primaryCandidate && compareMobile(item.row.mobileNumber, primaryCandidate.mobileNumber) === "same";
 
   // Linear-style keyboard-fast triage: 1 links the top candidate, N adds as
   // new, S skips — the brief named Linear specifically for this step.
@@ -401,23 +493,23 @@ function TriageStep({
   }, [isPending, primaryCandidate, onResolve]);
 
   return (
-    <div key={index} className="animate-[advanceIn_0.18s_ease-out]">
+    <div key={index}>
       <div className="flex items-center justify-between">
-        <h1 className="text-[26px] font-semibold tracking-[-0.02em] text-ink">
+        <h1 className="text-[24px] font-semibold tracking-[-0.02em] text-ink">
           Possible duplicate
         </h1>
         <Badge tone="accent" className="tabular-nums">
           {index + 1} of {total}
         </Badge>
       </div>
-      <p className="mt-2 text-[15px] leading-relaxed text-ink-secondary">
-        No email match — but this name is close to someone already in the inventory. The
-        highlighted word is what&apos;s different.
+      <p className="mt-2 text-[13px] leading-relaxed text-ink-secondary">
+        No email match — but {mobileFlagged ? "someone in the inventory shares this surname and phone number" : "this name is close to someone already in the inventory"}. The highlighted word is
+        what&apos;s different; the signals under each candidate are what agrees and what does not.
       </p>
 
-      <Card className="mt-8 p-5">
+      <Panel className="mt-8 p-5">
         <div className="text-[13px] font-medium text-ink-secondary">This week&apos;s submission</div>
-        <div className="mt-1.5 text-[19px] font-semibold text-ink">
+        <div className="mt-1.5 text-[15px] font-semibold text-ink">
           {primaryCandidate ? (
             <NameWithDiff
               firstName={item.row.firstName}
@@ -426,46 +518,104 @@ function TriageStep({
               otherLastName={primaryCandidate.lastName}
             />
           ) : (
-            displayName(item.row)
+            formatNameNatural(item.row)
           )}
         </div>
-        <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-[13px] text-ink-secondary">
-          <span>{item.row.email || "No email provided"}</span>
-          <span>·</span>
-          <span>{item.row.sportSelected}</span>
-        </div>
-      </Card>
+        <MetaLine
+          parts={[
+            item.row.email || "No email provided",
+            maskMobile(item.row.mobileNumber) ?? "No mobile number",
+            item.row.sportSelected,
+            displayNickname(item.row) && `goes by ${displayNickname(item.row)}`,
+          ]}
+        />
+      </Panel>
 
       <div className="mt-4 space-y-3">
-        {item.candidates.map((candidate, candidateIndex) => (
-          <Card
-            key={candidate.playerId}
-            className="flex flex-col items-stretch gap-4 p-5 sm:flex-row sm:items-center sm:justify-between"
-          >
-            <div>
-              <div className="text-[13px] font-medium text-ink-secondary">Already in inventory</div>
-              <div className="mt-1.5 text-[19px] font-semibold text-ink">
-                <NameWithDiff
-                  firstName={candidate.firstName}
-                  lastName={candidate.lastName}
-                  otherFirstName={item.row.firstName}
-                  otherLastName={item.row.lastName}
-                />
-              </div>
-              <div className="mt-1 text-[13px] text-ink-secondary">{candidate.email}</div>
-            </div>
-            <Button
-              variant="secondary"
-              className="shrink-0 whitespace-nowrap"
-              disabled={isPending}
-              onClick={() => onResolve({ kind: "linkExisting", playerId: candidate.playerId })}
+        {item.candidates.map((candidate, candidateIndex) => {
+          const verdict = compareMobile(item.row.mobileNumber, candidate.mobileNumber);
+          const incomingNickname = displayNickname(item.row);
+          const candidateNickname = displayNickname(candidate);
+          const sharesNickname =
+            !!incomingNickname &&
+            !!candidateNickname &&
+            incomingNickname.toLowerCase() === candidateNickname.toLowerCase();
+
+          return (
+            <Panel
+              key={candidate.playerId}
+              // A matching phone is close to proof, and the matcher already
+              // put that candidate first. Ringing it says which row to read
+              // rather than leaving the reviewer to find it in the signals.
+              emphasis={verdict === "same"}
             >
-              <Check className="size-4" strokeWidth={2} />
-              Same person
-              {candidateIndex === 0 && <Kbd>1</Kbd>}
-            </Button>
-          </Card>
-        ))}
+              <div className="flex flex-col items-stretch gap-4 p-5 sm:flex-row sm:items-start sm:justify-between">
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-[13px] font-medium text-ink-secondary">
+                      Already in inventory
+                    </span>
+                    {verdict === "same" && <Badge tone="accent">Same phone</Badge>}
+                  </div>
+                  <div className="mt-1.5 text-[15px] font-semibold text-ink">
+                    <NameWithDiff
+                      firstName={candidate.firstName}
+                      lastName={candidate.lastName}
+                      otherFirstName={item.row.firstName}
+                      otherLastName={item.row.lastName}
+                    />
+                  </div>
+                  <MetaLine
+                    parts={[candidate.email, candidateNickname && `goes by ${candidateNickname}`]}
+                  />
+
+                  <SignalList>
+                    <MobileSignal
+                      verdict={verdict}
+                      masked={maskMobile(candidate.mobileNumber)}
+                    />
+                    {/* A shared nickname is real evidence these two rows are
+                        the same person — often better evidence than the
+                        spelling of a legal first name. */}
+                    {incomingNickname && candidateNickname && (
+                      <Signal state={sharesNickname ? "met" : "failed"}>
+                        {sharesNickname
+                          ? `Both go by ${candidateNickname}`
+                          : `Goes by ${candidateNickname}, not ${incomingNickname}`}
+                      </Signal>
+                    )}
+                    <Signal
+                      state={
+                        candidate.churchAffiliation && item.row.churchAffiliation
+                          ? candidate.churchAffiliation === item.row.churchAffiliation
+                            ? "met"
+                            : "failed"
+                          : "unknown"
+                      }
+                    >
+                      {candidate.churchAffiliation
+                        ? `Attends ${candidate.churchAffiliation}`
+                        : "No church on file"}
+                    </Signal>
+                  </SignalList>
+
+                  <HistoryLine history={histories[candidate.playerId]} />
+                </div>
+
+                <Button
+                  variant="secondary"
+                  className="shrink-0 whitespace-nowrap"
+                  disabled={isPending}
+                  onClick={() => onResolve({ kind: "linkExisting", playerId: candidate.playerId })}
+                >
+                  <Check className="size-4" strokeWidth={2} />
+                  Same person
+                  {candidateIndex === 0 && <Kbd>1</Kbd>}
+                </Button>
+              </div>
+            </Panel>
+          );
+        })}
       </div>
 
       <div className="mt-6 flex items-center gap-3">
@@ -507,20 +657,20 @@ function DuplicateStep({
   onConfirm: () => void;
 }) {
   return (
-    <div className="animate-[fadeIn_0.2s_ease-out]">
+    <div>
       <div className="flex size-11 items-center justify-center rounded-full bg-danger-tint text-danger">
         <AlertCircle className="size-5" strokeWidth={2} />
       </div>
-      <h1 className="mt-4 text-[26px] font-semibold tracking-[-0.02em] text-ink">
+      <h1 className="mt-4 text-[24px] font-semibold tracking-[-0.02em] text-ink">
         {gameNightDate} is already uploaded.
       </h1>
-      <p className="mt-2 text-[15px] leading-relaxed text-ink-secondary">
+      <p className="mt-2 text-[13px] leading-relaxed text-ink-secondary">
         Nothing has been saved yet. A game night for this date already exists, uploaded from{" "}
         <span className="font-medium text-ink">{existing.sourceFilename}</span> with{" "}
         {existing.rowCount} {existing.rowCount === 1 ? "row" : "rows"}.
       </p>
 
-      <Card className="mt-6 p-5">
+      <Panel className="mt-6 p-5">
         <div className="text-[13px] font-medium text-ink-secondary">If you continue</div>
         <p className="mt-1.5 text-[13px] leading-relaxed text-ink-secondary">
           This becomes a <span className="font-medium text-ink">second, separate</span> game night on{" "}
@@ -532,7 +682,7 @@ function DuplicateStep({
           To correct a bad upload instead, delete the existing game night and its participation rows in
           the Sheet first, then upload this file again.
         </p>
-      </Card>
+      </Panel>
 
       <div className="mt-6 flex flex-wrap gap-2">
         <Button type="button" variant="secondary" onClick={onCancel} disabled={isPending}>
@@ -564,31 +714,31 @@ function SummaryStep({
   }, [hadFlags]);
 
   return (
-    <div className="animate-[fadeIn_0.2s_ease-out]">
+    <div>
       <div className="flex size-11 items-center justify-center rounded-full bg-success-tint text-success">
         <Check className="size-5" strokeWidth={2} />
       </div>
-      <h1 className="mt-4 text-[26px] font-semibold tracking-[-0.02em] text-ink">{headline}</h1>
-      <p className="mt-2 text-[15px] leading-relaxed text-ink-secondary">
+      <h1 className="mt-4 text-[24px] font-semibold tracking-[-0.02em] text-ink">{headline}</h1>
+      <p className="mt-2 text-[13px] leading-relaxed text-ink-secondary">
         {gn.gameNightDate} · {gn.sourceFilename}
       </p>
 
       <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3">
-        <StatCard label="Rows in file" value={gn.rowCount} />
-        <StatCard label="New players" value={summary.newPlayerCount} accent />
-        <StatCard label="Returning players" value={summary.returningPlayerCount} />
-        <StatCard
+        <MetricPanel label="Rows in file" value={gn.rowCount} />
+        <MetricPanel label="New players" value={summary.newPlayerCount} accent />
+        <MetricPanel label="Returning players" value={summary.returningPlayerCount} />
+        <MetricPanel
           label="Records updated"
           value={summary.refreshedPlayerCount}
-          sublabel="Newer answers than we had"
+          note="Newer answers than we had"
         />
-        <StatCard label="Duplicates collapsed" value={matchResult.withinBatchDuplicatesCollapsed} />
-        <StatCard label="Unusable rows" value={matchResult.unusableRowCount} />
-        <StatCard label="Flagged for review" value={gn.flaggedCount} />
+        <MetricPanel label="Duplicates collapsed" value={matchResult.withinBatchDuplicatesCollapsed} />
+        <MetricPanel label="Unusable rows" value={matchResult.unusableRowCount} />
+        <MetricPanel label="Flagged for review" value={gn.flaggedCount} />
       </div>
 
       {hadFlags && (
-        <Card className="mt-4 p-5">
+        <Panel className="mt-4 p-5">
           <div className="text-[13px] font-medium text-ink-secondary">Review outcomes</div>
           <div className="mt-3 flex flex-wrap gap-2">
             <Badge tone="success">
@@ -604,7 +754,7 @@ function SummaryStep({
               {gn.resolvedSkipCount} skipped
             </Badge>
           </div>
-        </Card>
+        </Panel>
       )}
 
       <Button variant="secondary" className="mt-8 w-full" onClick={onReset}>
@@ -614,3 +764,4 @@ function SummaryStep({
     </div>
   );
 }
+

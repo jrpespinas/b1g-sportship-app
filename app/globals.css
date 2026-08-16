@@ -51,37 +51,94 @@
    */
   --color-series-returnee: #2a78d6;
   --color-series-firsttimer: var(--color-accent);
-  --color-series-neutral: #1baf7a;
+
+  /*
+   * Sequential blue, light to dark — the ramp the cohort grid and the arrival
+   * ridgeline read magnitude from. One hue, stepped in OKLCH at the
+   * `--color-series-returnee` hue angle (-104.5deg) so it sits in the same
+   * family as every other blue in the system, with the darkest step reusing
+   * `--color-seg-leaders` exactly.
+   *
+   * Measured: adjacent-step OKLab dE 10.1 / 12.5 / 17.9 / 12.5 / 13.0, all
+   * clear of the 8 floor. Text on a step flips at 4: ink clears 4.5:1 on
+   * steps 1-3 (15.4 / 11.5 / 7.6) and white clears it on 4-6 (5.0 / 8.5 /
+   * 13.9). Step 4 was darkened from the even-interval value for exactly that
+   * reason — at L 0.58 neither ink nor white reached 4.5.
+   */
+  --color-blue-1: #d9eaff;
+  --color-blue-2: #aacdfb;
+  --color-blue-3: #73a7ec;
+  --color-blue-4: #2f6fc2;
+  --color-blue-5: #134c8f;
+  --color-blue-6: #082c57;
+
+  /*
+   * Was aqua #1BAF7A — the one token that broke the blue-and-orange
+   * restriction. Now the ramp's step 5: 8.5:1 on white, and 31-48 dE from
+   * every orange in the system, so a single-series bar can never be read as
+   * first-timers or no-shows.
+   */
+  --color-series-neutral: var(--color-blue-5);
+
+  /*
+   * The no-show band. Came/did-not-come is a status pair, not a categorical
+   * one, so it draws from the status side: `--color-success` for arrivals is
+   * already what "came" means on this dashboard, and this is its complement.
+   *
+   * Clay rather than the obvious `--color-accent-tint`, which the bar version
+   * of this comparison used to carry: at 1.6:1 against white a tint is fine
+   * as a short bar with a ring around it, and nearly invisible as the upper
+   * band of an area chart. Measured: 2.7:1 against the panel, worst-case CVD
+   * separation from `--color-success` 10.3 (protanopia), and 15.5 from
+   * `--color-seg-uninvolved` — far enough that the peach band answering
+   * "not in a group" one panel above cannot be mistaken for this one.
+   */
+  --color-series-noshow: #d98b5f;
   --color-chart-grid: var(--color-border);
   --color-chart-axis: var(--color-border-strong);
 
   /*
-   * Discipleship segments. The four buckets are a journey
-   * (Leaders -> Members -> Seekers -> Not involved).
+   * Discipleship segments — resolved 2026-08-12.
    *
-   * !! UNRESOLVED — the shipped values below are a two-hue-family idea
-   * (blue = in a group, orange = not in a group). The intent is good: it
-   * makes the in/out-group split the eye's first read, which is the split
-   * the ministry acts on. It does not currently validate, measured with
-   * `validate_palette.js` on white:
-   *   - normal-vision floor FAILS, leaders <-> members ΔE 14.6 (floor 15)
-   *   - chroma floor FAILS on #f4b397 (0.085), and it sits at 1.79:1
-   *   - Ember also means "first-timers" in the trend chart on this page
-   * Two blues that both sit inside the categorical lightness band are
-   * inherently too close to clear ΔE 15, so the two-family shape cannot be
-   * rescued by re-stepping alone.
+   * Two hue families, because the split the ministry acts on is in-a-group
+   * versus not: blue = placed (Leaders, Members), warm = unplaced (Seekers,
+   * Not involved). That makes the actionable half of any chart the eye's
+   * first read, before anyone parses a legend.
    *
-   * The set that DID pass, as an ordinal ramp — steps 650/500/400/250 of the
-   * dataviz blue ramp, monotone L, gaps >= 0.06, light end 2.11:1:
-   *   leaders #104281  members #256abf  seekers #3987e5  uninvolved #86b6ef
-   * It also delivers the in/out-group read for free: the two dark bands are
-   * the in-group, the two light bands are not. Restore it, or re-pick the
-   * whole set as four distinct validated hues — but do not leave it half-way.
+   * Measured on white (OKLab ΔE ×100, Viénot dichromat simulation):
+   *   worst adjacent normal-vision pair  24.0  (floor 15)
+   *   worst adjacent CVD pair            21.1  (floor 8)
+   *   ΔE from Ember                      15.7
+   *
+   * Two earlier claims corrected by that measurement. The failing pair was
+   * never the orange — it was Leaders <-> Members at ΔE 14.6, two blues that
+   * the all-blue ordinal ramp shares. Darkening Leaders to #082c57 clears it,
+   * so "the two-family shape cannot be rescued by re-stepping" was wrong.
+   *
+   * Seekers is burnt orange, NOT Ember: Ember already means "first-timers" in
+   * the trend chart on the same page, and one colour with two meanings on o
+   ne
+   * screen is worse than a slightly less punchy band. 15.7 ΔE of separation
+   * keeps them distinct.
+   *
+   * All four are opaque on purpose. The previous `uninvolved` value carried
+   * an alpha channel (#eb875c8e), which in a stacked area chart composites
+   * over whatever band sits behind it — so the rendered colour was never the
+   * token colour.
    */
-  --color-seg-leaders: #104281;
+  --color-seg-leaders: #082c57;
   --color-seg-members: #256abf;
-  --color-seg-seekers: #ff6f2f;
-  --color-seg-uninvolved: #eb875c8e;
+  --color-seg-seekers: #c2410c;
+  --color-seg-uninvolved: #f7c4a3;
+
+  /*
+   * "Not recorded" — added 2026-08-14 when the classification stopped folding
+   * never-asked people into "not involved". Deliberately a neutral grey and
+   * not a step on either ramp: this band is the absence of an answer, not a
+   * position in the pipeline, and giving it a hue would place it on a journey
+   * nobody has started. Matches the neutral the funnel's hatch already uses.
+   */
+  --color-seg-unrecorded: #b4b4bb;
 
   /* Analyst-register page ground: white cards read as panels against it. */
   --color-page: #f4f5f7;
@@ -115,10 +172,18 @@
   --color-series-returnee: var(--color-series-returnee);
   --color-series-firsttimer: var(--color-series-firsttimer);
   --color-series-neutral: var(--color-series-neutral);
+  --color-series-noshow: var(--color-series-noshow);
+  --color-blue-1: var(--color-blue-1);
+  --color-blue-2: var(--color-blue-2);
+  --color-blue-3: var(--color-blue-3);
+  --color-blue-4: var(--color-blue-4);
+  --color-blue-5: var(--color-blue-5);
+  --color-blue-6: var(--color-blue-6);
   --color-seg-leaders: var(--color-seg-leaders);
   --color-seg-members: var(--color-seg-members);
   --color-seg-seekers: var(--color-seg-seekers);
   --color-seg-uninvolved: var(--color-seg-uninvolved);
+  --color-seg-unrecorded: var(--color-seg-unrecorded);
   --color-page: var(--color-page);
   --color-chart-grid: var(--color-chart-grid);
   --color-chart-axis: var(--color-chart-axis);

@@ -21,6 +21,19 @@ colors:
   danger-tint: "#fef3f2"
   series-returnee: "#2a78d6"
   series-firsttimer: "#ff6f2f"
+  series-neutral: "#134c8f"
+  series-noshow: "#d98b5f"
+  blue-1: "#d9eaff"
+  blue-2: "#aacdfb"
+  blue-3: "#73a7ec"
+  blue-4: "#2f6fc2"
+  blue-5: "#134c8f"
+  blue-6: "#082c57"
+  seg-leaders: "#082c57"
+  seg-members: "#256abf"
+  seg-seekers: "#c2410c"
+  seg-uninvolved: "#f7c4a3"
+  page: "#f4f5f7"
   chart-grid: "#e5e5e7"
   chart-axis: "#d2d2d7"
 typography:
@@ -36,6 +49,12 @@ typography:
     fontWeight: 600
     lineHeight: 1
     letterSpacing: "normal"
+  pageTitle:
+    fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Display', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
+    fontSize: "24px"
+    fontWeight: 600
+    lineHeight: 1.2
+    letterSpacing: "-0.02em"
   headline:
     fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Display', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
     fontSize: "26px"
@@ -75,8 +94,11 @@ typography:
 rounded:
   input: "10px"
   card: "16px"
+  panel: "12px"
   pill: "9999px"
   chip: "5px"
+  chip-sm: "8px"
+  switch: "7px"
 spacing:
   xs: "8px"
   sm: "12px"
@@ -92,11 +114,23 @@ components:
     padding: "10px 16px"
   button-primary-hover:
     backgroundColor: "{colors.ember-hover}"
+  button-primary-sm:
+    backgroundColor: "{colors.ember}"
+    textColor: "{colors.graphite}"
+    rounded: "{rounded.chip-sm}"
+    padding: "8px 12px"
+    typography: "{typography.label}"
   button-secondary:
     backgroundColor: "{colors.surface}"
     textColor: "{colors.graphite}"
     rounded: "{rounded.input}"
     padding: "10px 16px"
+  button-secondary-sm:
+    backgroundColor: "{colors.surface}"
+    textColor: "{colors.graphite}"
+    rounded: "{rounded.chip-sm}"
+    padding: "8px 12px"
+    typography: "{typography.label}"
   button-ghost:
     backgroundColor: "transparent"
     textColor: "{colors.graphite-secondary}"
@@ -118,6 +152,23 @@ components:
     backgroundColor: "{colors.surface}"
     rounded: "{rounded.card}"
     padding: "20px"
+  panel:
+    backgroundColor: "{colors.surface}"
+    rounded: "{rounded.panel}"
+    padding: "20px"
+  view-switch:
+    backgroundColor: "{colors.surface}"
+    rounded: "{rounded.switch}"
+    padding: "2px"
+  view-switch-option:
+    backgroundColor: "transparent"
+    textColor: "{colors.graphite-secondary}"
+    typography: "{typography.micro}"
+    rounded: "{rounded.chip}"
+    padding: "4px 8px"
+  view-switch-option-selected:
+    backgroundColor: "{colors.surface-subtle}"
+    textColor: "{colors.graphite}"
 ---
 
 # Design System: B1G Sportship — Player Inventory
@@ -169,9 +220,23 @@ The One-Voice Rule governs UI chrome; a chart's series need identity color, whic
 
 - **Returnees** — blue (`#2A78D6`).
 - **First-timers** — Ember (the accent doing double duty as a series color, deliberately: it's the number leadership most wants to notice).
-- **Single-series charts not part of the returnee/first-timer story** (DGroup involvement by category, attendance frequency) — aqua (`#1BAF7A`, `--color-series-neutral`), slot 3, unchanged from the reference palette. Added 2026-08-08 after a critique flagged these charts silently inheriting `RankedBarChart`'s Ember default, colliding with Ember's established "first-timers" meaning elsewhere on the same dashboard. Re-validated as a 3-slot set: worst adjacent CVD 10.4, worst normal-vision 29.1.
+- **Single-series charts not part of the returnee/first-timer story** (DGroup involvement by category, attendance frequency) — `--color-series-neutral`, now deep blue `#134C8F`. Added 2026-08-08 as aqua `#1BAF7A`, after a critique flagged these charts silently inheriting `RankedBarChart`'s Ember default and colliding with Ember's established "first-timers" meaning on the same dashboard; that fix still holds, the hue changed 2026-08-13 when the blue-and-orange restriction landed. Re-measured against every orange in the system: ΔE 31.3 to 47.9, and 8.5:1 on white.
 
-Add further series only in the palette's documented order (yellow, magenta, green, violet, red) when a chart needs a 4th+ series — never invent a new hue for "series 5." Ember still obeys the Ember Contrast Rule inside a chart: it's a mark/fill color, never chart label or axis text.
+Add further series only in the palette's documented order (yellow, magenta, green, violet, red) when a chart needs a 4th+ series — never invent a new hue for "series 5." Note that the blue-and-orange restriction now supersedes the tail of that order: a 4th+ series is a signal to fold, facet, or composite-encode, not to reach for a new hue. Ember still obeys the Ember Contrast Rule inside a chart: it's a mark/fill color, never chart label or axis text.
+
+**Blue and orange only; green is reserved.** Set 2026-08-13 with the dashboard rebuild. Blue carries depth of involvement and the present/returning side of any pair; orange carries absence and first-timers. **Green means capacity and placement** — the "can absorb" chip, the Leaders/Members badge, the spare-capacity remainder in the matching bar, the leadership-surplus figure — and never appears as a chart mark elsewhere. The one token that broke the rule, `--color-series-neutral` (aqua `#1BAF7A`), is now the blue ramp's step 5.
+
+**The sequential blue ramp** (`--color-blue-1` … `--color-blue-6`, `#D9EAFF` → `#082C57`) is what the discipleship funnel, the age pyramid and the leadership-intent pipeline read magnitude from. (It was written for the cohort grid and the arrival ridgeline; both were cut, the ramp outlived them.) One hue, stepped in OKLCH at the `--color-series-returnee` hue angle so it stays in the family, with the darkest step reusing `--color-seg-leaders` exactly. Measured: adjacent-step ΔE 10.1 / 12.5 / 17.9 / 12.5 / 13.0, all clear of the 8 floor. Text on a step flips at 4 — ink clears 4.5:1 on steps 1–3, white on steps 4–6; step 4 was darkened off the even interval because at `L 0.58` neither did.
+
+**The Borrowed Legend Rule.** Added 2026-08-14. A chart whose two sides *are*
+segments — leaders against seekers, in a group against not — takes the segment
+tokens verbatim rather than picking a fresh pair. The supply/demand butterflies
+wear `--color-seg-leaders` on the offer wing and `--color-seg-seekers` on the
+want wing, so a reader who learned the funnel reads them without a second
+legend. The alternative — a new pair per panel — teaches the same distinction
+twice in two colours.
+
+**Status pairs are not series.** Came/did-not-come is a status pair, so it draws from the status side rather than taking two categorical slots: `--color-success` for arrivals, and clay (`#D98B5F`, `--color-series-noshow`) for its complement. Added 2026-08-13 with the night-by-night show-up panel. Not `--color-accent-tint`, which the bar version carried: at 1.6:1 against white a tint works as a short bar with a ring around it and disappears as the upper band of an area chart. Measured for clay — 2.7:1 against the panel, worst-case CVD separation from `--color-success` 10.3 (protanopia), and 15.5 from `--color-seg-uninvolved`, far enough that the peach band answering "not in a group" one panel above cannot be mistaken for it. One meaning gets one color: the bar chart was migrated onto the same token in the same pass, so a reader comparing the two panels never learns "did not come" twice.
 
 ## Typography
 
@@ -197,6 +262,8 @@ Tabular figures (`font-variant-numeric: tabular-nums`) are reserved for numbers 
 
 Single-column flow, left-aligned, no sidebar — the task fills the viewport rather than sharing it with wayfinding chrome. **Revised**: a single thin top bar (56px, `h-14`) is the one piece of persistent chrome the system carries, added once the product grew past a single isolated surface — see Components → Navigation. It is not a precedent for more chrome; the "no sidebar, no decorative navigation" discipline still holds everywhere below it. Below the top bar, generous top padding (64–80px) before page content starts; the page does not open with a hero or banner. Vertical rhythm between blocks steps through the spacing scale (8 / 12 / 16 / 24 / 32px) — more space above a new section than below the content that precedes it. Responsive behavior is a stacking model, not a reflow one: two-up field grids (date + name, stat cards) collapse to single-column below the `sm` breakpoint rather than shrinking in place; card action rows that pair a text block with a button stack vertically on narrow viewports instead of compressing. The same rule applies at coarser grains too, not just field pairs — the dashboard's bento mosaic (`.impeccable/surfaces/dashboard.md` carries its exact tile spans) is a wide-viewport-only composition whose tiles each collapse to full-width and stack in reading order below `sm`, same mechanism as everything else, just applied to whole tiles instead of two-up pairs.
 
+**Two intervals, and the second one means something** (added 2026-08-16). Panels inside a section sit at 12px. A section break gets 32px above its heading and 12px below it — the only generous interval on the page, spent at the one point where the subject changes and the reader changes with it. The dashboard reached nine panels using 12px eight times, and the cost was that nothing read as leading: an even cadence tells a reader every block is a peer. A page earns a second interval when it genuinely has two audiences or two subjects; it does not earn a third. Where a break separates audiences rather than topics, it is a real `<section aria-labelledby>` so the split survives into the accessibility tree instead of being a hairline.
+
 **Content width is two-tier, not one fixed number.** A linear task flow (the upload surface — one form, one triage card, one decision at a time) caps at 640px: nothing there benefits from more measure, and a narrower column keeps a sequential task feeling sequential. A read/browse surface with denser content (the dashboard — a 4-across KPI grid, full-width charts, a leaderboard table) widens to ~960px: at 640px those elements would either wrap awkwardly or force scroll that adds nothing. Both tiers keep every other Layout commitment (single column, no sidebar, the same stacking model, the same spacing scale) — only the cap itself flexes with the surface's actual content shape.
 
 ## Elevation & Depth
@@ -213,6 +280,8 @@ Ambient, not structural. One shadow value exists in the entire system, applied u
 
 Two radius tiers carry the entire system: a tighter 10px on interactive controls (buttons, inputs) and a more generous 16px on containers (cards). Badges and the keyboard-hint chip use their own small tiers (fully rounded pill for badges, 5px for the kbd chip) because they're reading as labels, not surfaces. Borders are hairline (1px) throughout — `Border` on cards and dividers, `Border Strong` on form inputs — never doubled with a shadow-plus-border-plus-fill treatment on the same edge.
 
+**Nested radii are computed, not chosen.** Where one rounded thing sits inside another, the outer radius is the inner radius plus the gap between them: the segmented switch is a 7px group around 5px options with 2px of padding, and the analyst register's 12px panel holds 5px chips well clear of its corners. Concentric corners drawn at the same radius read as a mistake at 12px even when nobody can say why.
+
 ## Components
 
 ### Buttons
@@ -228,6 +297,54 @@ Two radius tiers carry the entire system: a tighter 10px on interactive controls
 - **Accent:** `Ember Tint` fill / `Ember Ink` text — marks something tied to the accent's meaning (e.g. a queue-position counter).
 - **Success:** `Success Tint` fill / `Success` text — confirms a positive resolved state.
 
+### Icons (added 2026-08-12)
+
+One library — `lucide-react`, 2px stroke — at three sizes: **16px** in the top
+bar and panel headers, **14px** inline with text, **12px** inside dense table
+cells. Icons always inherit `currentColor` so they change ink with the text
+they sit beside, and they are `aria-hidden` wherever a label already names the
+thing.
+
+**The Panel Header Icon Rule.** A panel header may carry a 16px icon in
+`Graphite Secondary`, but **named sections only** — the panels a reader scans
+between. A panel that repeats does not: the 40+ seeker panels on `/match` are
+titled with people's names, and a person is not a category. Forty identical
+icons are texture, not wayfinding. Metric panels take no icon either; their
+34px figure is the focal element and an icon beside it competes.
+
+Shipped header icons, re-listed 2026-08-14 against the panels that exist:
+Matching market `HeartHandshake` · What leaders offer, what seekers want
+`Scale` · Who registers, by age `Users` · Attendance by sport `ClipboardCheck`
+· Discipleship mix by sport `LayoutGrid` · Where everyone stands `Layers` ·
+Heading toward leading `Sprout` · Who keeps coming, and who does not
+`ListOrdered` · the Players worklist `Users` · Per-leader packets `FolderDown`
+· and on player detail, Discipleship `HeartHandshake`, Identity `UserRound`,
+Participation history `CalendarDays`.
+
+The roster panel deliberately takes `ListOrdered` and **not** a trophy, medal,
+or award: the Don'ts below rule out completion badges, and a ranked list is
+what that panel actually is. `Scale` was chosen for supply-against-demand over
+an arrow pair — the panel weighs two populations against each other, it does
+not move anything between them.
+
+**Gender marks.** `Mars` and `Venus` at 14px, **inheriting ink — never
+coloured**. Colouring gender would add two semantic hues, collide with the
+One-Voice Rule, and demand palette validation for a distinction the shape
+already carries. Placed only where the split is load-bearing: the `/match`
+seeker pool line, the dashboard capacity split, and the player detail Gender
+field. Not beside the dashboard's `569 male` substats, where an icon would
+restate its own label. The gender filter on `/match` is a native `<select>`,
+which cannot render an icon in its options, so it stays plain text.
+
+**Sports carry no icon, and this is a decision rather than an omission.** Of
+the five — Basketball, Badminton, Volleyball, Pickleball, Running — only
+`Volleyball` and `Footprints` exist honestly in a 3,531-icon library. There is
+no basketball, racket, or paddle. Mapping the other three to `Circle`,
+`Target`, and `CircleDot` would be three arbitrary conventions a reader has to
+memorise, which is worse than the words they replace. Sports stay as text
+badges and chart legends. The source data does carry emoji (🏀 Basketball) and
+`normalizeSport` strips them on purpose; do not reintroduce them.
+
 ### Cards / Containers
 - **Corner Style:** 16px radius.
 - **Background:** `Surface` (#FFFFFF), identical to canvas.
@@ -240,34 +357,104 @@ Two radius tiers carry the entire system: a tighter 10px on interactive controls
 - **Focus:** A 2px `Ember`-colored ring via `focus-visible`, offset from the control — never a border-color-only change, so keyboard focus stays legible against the neutral palette.
 - **Dropzone (signature field variant):** Dashed `Border` outline instead of solid, centered icon-plus-label content, switches to a solid `Ember` border with `Ember Tint` fill on active drag-over — the one moment a large fill of the accent color is permitted, because it's a transient state, not a resting one.
 
+### Segmented Switch (added 2026-08-14)
+
+The one control that lives inside a panel header. Three on the dashboard now:
+count/ratio on both sport grids, and the three-view roster switcher.
+
+- **Style:** a `Border Strong` hairline group at 7px radius wrapping 0.5px of padding; each option is a 12px medium button at 5px radius, `px-2 py-1`.
+- **States:** the selected option takes a `Surface Subtle` fill and `Graphite` ink; the rest are `Graphite Secondary` hovering to `Graphite`. No accent — this switches a view, it does not commit anything, and Ember is spent on actions and attention.
+- **Semantics:** `role="group"` with an `aria-label` naming what is being switched, and `aria-pressed` on each button. Never a bare styled `<div>`.
+- **Focus:** the system ring — 2px `Ember` at `ring-offset-1` against the panel.
+
+**The Switch-In-Place Rule.** When two readings share a table's columns or a
+grid's axes and differ only in ranking, filter, or normalisation, they are one
+component with a switch — never two panels. Three panels printing the same
+table three times is the failure this rule exists to prevent; the roster's
+returning / no-show / unplaced views are the case that earned it.
+
+The switch is also where a **Table** option belongs when the panel holds
+charts. It reads as a third way of looking at the same data, which is exactly
+what it is, and it costs one control instead of one button per facet — the
+sport grids serve six charts each from a single switch.
+
 ### Keyboard Hint Chip
 - **Style:** 5px radius, `Border Strong` outline, `Surface Subtle` fill, 11px medium `Graphite Tertiary` text, sized to a single character.
 - Attached inline to the action it triggers (not floating in a legend), reinforcing that the shortcut belongs to that specific control.
 
-### Charts (line & bar)
-- **Marks:** 2px lines, round join/cap. Bars get rounded *top* corners only (4px), square at the baseline — a bar rounded on all four corners is a floor violation, not a style choice.
-- **Grid:** hairline (1px), solid, one step off surface (`Border`) — gridlines are never dashed.
+### Charts
+
+**Two implementation families, and the split is deliberate.** A plotted chart
+with an axis and a hover target is inline SVG in `components/charts` (the
+stacked area small-multiple is the only one shipping today). Everything else —
+a row of proportional bars, a mirrored pair, a part-to-whole track, a mix bar —
+is CSS: a label, a track, and a `width:%` span. The CSS family is not a
+shortcut around SVG. These are one-dimensional comparisons at 12px in a dense
+grid, they inherit the type ramp and the ink tokens for free, and they reflow
+in a responsive column without a viewBox recalculation.
+
+**The mark vocabulary in use:**
+- **Stacked area small multiples** (attendance by sport, discipleship mix by sport) — bands in pipeline order, bottom band against the flat baseline where it is read most accurately.
+- **Proportional bar rows** (the discipleship funnel, the leadership pipeline, the age cross-tab, the workplace split) — one shared scale, `Math.max(1.5, …)` so a real-but-tiny value still draws.
+- **Mirrored rows / butterfly** (the age pyramid, the four supply-against-demand dimensions) — the form for "does it lean the same way at both ends", where a mirror on a shared centre answers in one look.
+- **Capacity-fill bar** (seekers against leaders with room, per gender) — the whole bar is the supply, the filled part is the demand, and the unfilled remainder is the finding. Replaced a dumbbell on 2026-08-14: a connector asks the reader to decode a distance, and its shared scale left one row short of the right edge for a reason that appeared nowhere on screen. **Each bar is its own denominator**, because the two markets never combine.
+- **Mix bar** (`SegmentMixBar`) — one 100%-wide stack summarising a facet above its own chart.
+
+**Rules that hold across both families:**
+- **Marks:** 2px lines, round join/cap. Bars get rounded *top* corners only (4px), square at the baseline — a bar rounded on all four corners is a floor violation, not a style choice. CSS bar rows take a 3px radius on the outer end only, square where they meet their axis, for the same reason.
+- **Grid:** hairline (1px), solid, one step off surface (`Border`) — gridlines are never dashed. A dashed line is reserved for an annotation that is not data, such as a median rule.
 - **Legend & labels:** a legend is always present for 2+ series (never make the reader color-match unaided); direct labels sit at line ends / above bar tops only, never on every point. Labels, axis text, and tooltip values stay in ink tokens even when the mark beside them carries a series color — text never wears the data color.
-- **Interaction:** every chart ships a hover/focus tooltip (crosshair + snap-to-nearest-point for lines, per-mark for bars) with a values-lead/label-follows hierarchy, plus a "View as table" twin — a tooltip enhances, it's never the only way to read a value.
-- **Width floor:** on narrow viewports a chart scrolls horizontally inside its card rather than shrinking text below legibility (`min-width` floor, ~480–560px depending on label density); a right-edge fade signals more content — never a silent, unsignaled clip.
+- **The printed number matches what the mark encodes.** If a bar is drawn as a share, the figure beside it is that share and the raw count moves to the row's `title`. A share bar with a count printed on it invites the reader to check one against the other and conclude the chart is wrong.
+- **Interaction:** an SVG chart ships a hover tooltip (crosshair + snap-to-nearest-point for lines, per-mark for bars) with a values-lead/label-follows hierarchy, plus a "View as table" twin — a tooltip enhances, it's never the only way to read a value. A CSS bar row carries its value as visible text already, so it needs neither.
+- **Chart hit-targets are pointer-only** (`aria-hidden`, no `tabindex`), and the table twin is the keyboard and screen-reader path. Corrected 2026-08-16: per-point rects were focusable buttons, which put **192 focus stops carrying no focus ring** between a keyboard user and the page's primary action — the single largest accessibility defect the app has had. A grid of small multiples hides each chart's own table button, so **the switch in the panel header carries the twin for the whole grid** (Count · Ratio · Table). A compact chart without a reachable table is not shippable; the twin is what makes the rects safe to remove.
+- **Width floor:** on narrow viewports a chart scrolls horizontally inside its card rather than shrinking text below legibility (`min-width` floor, ~360–640px depending on label density); never a silent, unsignaled clip. **Verify at 390px** — a `min-w-*` can propagate to the document's scroll width even inside `overflow-x-auto`, and the fix is a probe, not an assumption.
+- **Axis text is 11px minimum**, in `ink-secondary`, never `ink-tertiary` (2.6:1).
+- **A server-rendered SVG labels itself with `aria-label`, not `useId` + `aria-labelledby`** — hooks are unavailable in a server component. Its `<title>` is **one** interpolated string; a multi-child SVG title hydrates as a mismatch.
+- **Axis maxima hug the data.** Rounding up to one significant figure sends a 68-point maximum to an axis of 100 and spends a third of the plot on space the data never reaches; pick the smallest round interval leaving ≤8 ticks.
 - See Colors → Chart Series for which hues these marks use.
+
+**Three primitives are built and currently unrendered** — `bar-chart.tsx`,
+`grouped-bar-chart.tsx`, `line-chart.tsx` — along with `leaderboard.tsx`,
+`split-meter.tsx` and `ui/card.tsx` (the pre-analyst-register `StatCard` and
+its `DeltaIndicator`). They are the previous register's vocabulary, kept rather
+than deleted. Read them as available, not as current: nothing on any shipping
+surface looks like them, so copying one is adopting a style the app left.
 
 ### Navigation
 - **Style:** 56px (`h-14`) top bar, `Surface` background, single 1px `Border` bottom edge — no shadow (shadow is reserved for cards, and the bar isn't one).
-- **Content:** the B1G Sportship mark (left, ~24px tall, links to `/upload`) and the same three text links on every page (right), inside the same `max-w-[960px]` measure the wider surfaces use, so the bar's content aligns with page content below it rather than spanning edge-to-edge on its own rhythm.
+- **Content:** the B1G Sportship mark (left, ~24px tall, links to `/dashboard`) and the same four icon-and-label links on every page (right), inside a `max-w-[1280px]` measure so the bar's content aligns with page content below it rather than spanning edge-to-edge on its own rhythm. **Revised 2026-08-12:** this was `960px` and three text links. Both had drifted — Match shipped as a fourth destination, and Dashboard, Players, and Match all moved to 1280, leaving the mark sitting ~160px inboard of the content beneath it on every analyst page. `/upload` (640) and `/players/[id]` (880) stay narrower than the bar on purpose; they are reading and task columns, and chrome wider than a reading column is normal.
+- **Icons:** 16px `lucide-react` at `strokeWidth={2}`, one per destination — `Upload`, `Users` (Players), `HeartHandshake` (Match), `ChartColumn` (Dashboard). They inherit `currentColor`, so an icon changes ink together with its label as a single unit and never carries a state rule of its own. `aria-hidden`, because the label already names the destination.
+- **Icons pair with labels down to `sm`, then carry the bar alone.** With four destinations the mark gave way and the labels stayed. A fifth (`Nights`, `CalendarDays`) broke that: five icon-and-label pairs do not fit in the 342px a 390px viewport leaves inside the bar's padding. Below `sm` the mark hides, the labels hide, and the icons centre. Measured at each step, not assumed — the four-destination build collided with the mark, and the five-destination build collided with the labels.
+- **The one place a background wash carries state.** With no label, weight has nothing to act on, so below `sm` the active destination takes an `accent-tint` fill. This is a deliberate exception to the Links rule below, scoped to the only context where its mechanism is unavailable, and the fill is borrowed from the view chips rather than invented. Every link also carries an `aria-label`, because the visible text is gone from the DOM at that width.
 - **The mark is deliberately cropped from the client's full lockup** (`ssc logo.png`, 500×250 — the "B1G Sportship" icon+wordmark and a separate "Singles' Sports Community" script wordmark, divided by a rule). Only the left "B1G Sportship" half ships, for two reasons: the script half becomes illegible at the ~24px scale a nav mark needs, and its decorative, community-branded register is exactly what this admin chrome's neutral-utility register stays deliberately separate from (see Overview). The full lockup remains available in the repo root for any future public-facing surface that wants the warmer register.
-- **Links:** Label size (13px). Active route is `font-semibold` in `Graphite`; inactive is `font-medium` in `Graphite Secondary`, hovering to `Graphite`. No pill, no underline, no background change — weight and ink color alone carry state, consistent with the rest of the system never using a background wash for "selected."
+- **Links:** Label size (13px). Active route is `font-semibold` in `Graphite`; inactive is `font-medium` in `Graphite Secondary`, hovering to `Graphite`. No pill, no underline, no background change — weight and ink color alone carry state, consistent with the rest of the system never using a background wash for "selected." The active link also carries `aria-current="page"`, so the state is announced and not conveyed by weight alone.
 - **Same links everywhere, deliberately not role-split.** An earlier version showed only "Dashboard" on `/dashboard` and the full set elsewhere, using the route as a stand-in for role since no login exists. Reverted 2026-08-08: access control itself is now deferred (`docs/spec/04-access-control.md`), and every route is open to anyone regardless — hiding a link doesn't gate anything when the page behind it has no lock. All three destinations (Upload, Players, Dashboard) show on every page until real access control exists to make a role-split nav mean something again.
 - **The one sanctioned exception to "no chrome":** this bar exists because a 4-page, 2-role product had no way to move between pages, not because chrome earns a place by default. Don't add a second toolbar, breadcrumb trail, or secondary nav anywhere else in the system on the strength of this precedent.
 
-## The Analyst Register — `/dashboard` only (added 2026-08-11)
+## The Analyst Register — every surface (added 2026-08-11)
 
-Everything above governs Upload and Players. The dashboard was overhauled to a
-denser, more instrument-like register at the user's request, against a supplied
-data-observability reference. The user's ruling on the conflict with the
-One-Voice Rule: **Ember keeps actions, data marks get their own palette.** The
-rest of the app stays as documented above until a second pass carries this
-register across; the app is deliberately mixed in the meantime.
+The dashboard was overhauled to a denser, more instrument-like register at the
+user's request, against a supplied data-observability reference. The user's
+ruling on the conflict with the One-Voice Rule: **Ember keeps actions, data
+marks get their own palette.**
+
+It then spread, in three steps, each because a register boundary one click
+away is a boundary the reader experiences as two different apps:
+
+- **`/players` and `/players/[id]`, 2026-08-12** — the directory became a
+  worklist, and it is where the dashboard's own links land.
+- **`/match` and `/game-nights`, 2026-08-12/13** — new surfaces, built in it
+  from the start.
+- **`/upload`, 2026-08-12** — including its density and 1280px measure, at the
+  user's explicit direction. **This reverses what this section previously
+  said.** The earlier text argued upload should keep the original register
+  because a linear task flow is not a reading surface and 640px suited it.
+  That reasoning was put to the user and overruled; the whole app is now one
+  register. The trade it accepted is real and worth watching: the date and
+  file controls a weekly user drives at speed are now 13px.
+
+Nothing is left in the original register. The sections above document where it
+came from, not where any current surface lives.
 
 Documented from the built result, not from intention.
 
@@ -293,6 +480,10 @@ The register runs one step larger at the top and one step smaller in support.
   new step, above the 28px Metric tier — the reference's whole character is
   that the numbers dominate.
 - **Page title** (600, 24px, -0.02em) · **Panel title** (600, 15px, -0.01em).
+- The page lede under a title is **13px**, not 14px. 14px is a near-duplicate
+  of the 13px body step and the system rejects it by name (see Typography →
+  Label above); both analyst-register pages were corrected to 13px on
+  2026-08-12.
 - **Body / label** (13px) · **Micro** (12px): supporting copy, sub-figures,
   legends, table cells, axis labels. Proportionally more of the page is 12–13px
   than in the register above; that is the density, not an accident.
@@ -306,36 +497,51 @@ required part of the component, not decoration: each number here is read by
 someone deciding who to go and talk to, and a bare figure invites the wrong
 read — a subset mistaken for an addition, a total mistaken for a current state.
 
-### Discipleship segment ramp — UNRESOLVED
+### Discipleship segment palette — resolved 2026-08-12
 
-The four segments are a journey, so the design intent is to encode them by
-**lightness in one hue**, darkest = deepest involvement.
+**Two hue families, not one ordinal ramp.** Blue = placed (Leaders, Members),
+warm = unplaced (Seekers, Not involved). The split the ministry acts on is
+in-a-group versus not, so that split is what the eye resolves first, before
+anyone reads a legend.
 
-**The validated set** — steps 650/500/400/250 of the `dataviz` blue ramp.
-Passes `validate_palette.js --ordinal` on white: monotone lightness, every
-adjacent gap ≥ 0.06, light end 2.11:1. (A first attempt used the 100-step
-`#cde2fb` and failed at 1.32:1, under the 2:1 light-end floor.)
+| Segment | Token | Value | |
+|---|---|---|---|
+| Leaders | `--color-seg-leaders` | `#082c57` | dark navy |
+| Members | `--color-seg-members` | `#256abf` | blue |
+| Seekers | `--color-seg-seekers` | `#c2410c` | burnt orange |
+| Not involved | `--color-seg-uninvolved` | `#f7c4a3` | light peach |
+| Not recorded | `--color-seg-unrecorded` | `#b4b4bb` | neutral grey |
 
-| Segment | Token | Validated |
-|---|---|---|
-| Leaders | `--color-seg-leaders` | `#104281` |
-| Members | `--color-seg-members` | `#256abf` |
-| Seekers | `--color-seg-seekers` | `#3987e5` |
-| Not involved | `--color-seg-uninvolved` | `#86b6ef` |
+**The fifth band is deliberately colourless.** Added 2026-08-14, when the
+classification stopped folding never-asked people into "not involved". A hue
+would place this band somewhere on the journey, and its whole meaning is that
+the journey has not started — nobody has asked. Grey says that; a light step
+of either ramp would not. It is the same neutral the funnel's hatch already
+used for the same population, now available to the stacked bands too.
 
-**What currently ships is not this set.** `seekers` and `uninvolved` were
-changed to Ember and a light peach, making it a two-hue-family palette (blue =
-in a group, orange = not in a group). That intent is sound — it puts the
-in/out-group split first — but as measured it fails the normal-vision floor
-(leaders ↔ members ΔE 14.6, floor 15), fails the chroma floor on `#f4b397`,
-and gives Ember a second meaning alongside "first-timers" in the trend chart
-on the same page.
+Measured on white — OKLab ΔE ×100, Viénot dichromat simulation for
+deuteranopia and protanopia: **worst adjacent normal-vision pair 24.0** (floor
+15), **worst adjacent CVD pair 21.1** (floor 8), **ΔE 15.7 from Ember**.
 
-The two-family shape cannot be fixed by re-stepping: two blues that both sit
-inside the categorical lightness band are inherently under ΔE 15. Either
-restore the validated ramp — which already delivers the in/out-group read,
-since the two dark bands are the in-group — or re-pick all four as distinct
-validated hues.
+Three rules this set encodes, each of which a previous version got wrong:
+
+- **Seekers is burnt orange, never Ember.** Ember already means "first-timers"
+  in the trend chart on the same page. One colour with two meanings on one
+  screen is worse than a slightly less vivid band.
+- **All four are opaque.** An earlier `uninvolved` value carried an alpha
+  channel (`#eb875c8e`); in a stacked area chart a translucent band composites
+  over the band behind it, so the rendered colour is never the token colour.
+- **Leaders is `#082c57`, not `#104281`.** At the lighter value, Leaders ↔
+  Members measured ΔE 14.6 and failed the normal-vision floor. That pair — not
+  the orange — was the actual defect, and it is shared by the all-blue ramp
+  below.
+
+**The ordinal alternative, for the record.** Steps 650/500/400/250 of the
+`dataviz` blue ramp (`#104281` `#256abf` `#3987e5` `#86b6ef`) passes as an
+ordinal ramp: monotone lightness, gaps 0.142/0.095/0.142, light end 2.11:1. It
+was rejected rather than failed — its Members ↔ Seekers pair sits at ΔE 9.5,
+which is legible as a ramp but tight for two adjacent bands in a stacked area
+chart.
 
 Always render these in pipeline order, never sorted by size. The order is the
 meaning.
@@ -346,11 +552,29 @@ meaning.
 - **Do** keep segment bands in pipeline order and in the ordinal ramp.
 - **Do** break a share-mode ribbon where a night has no attendance — plotting
   0% would claim a collapse on a night that simply had no session.
+- **Do** open a facetted grid with its Total facet, then run the categories
+  alphabetically, so two grids of the same five things can be read against each
+  other position by position. A ranking inside such a grid is a chip on the
+  facet that earned it, never a promotion to first place — and the Total facet
+  is excluded from the ranking, because it is the baseline the others are read
+  against.
 - **Don't** add a shadow to a panel. The grey ground is the depth.
 - **Don't** spend a segment colour on chrome, or Ember on a data mark.
 - **Don't** link a figure to a filtered list unless the filter returns exactly
-  the set that figure counted. "Leaders" spans two categories the directory
-  filter cannot express, so it deliberately has no link.
+  the set that figure counted. **Resolved 2026-08-12:** the directory now
+  filters by segment, so "Leaders" — which spans two of the old five
+  categories — finally links to exactly its own set. **Enforced properly
+  2026-08-14:** the directory also filters by *category*, because segment is
+  too coarse for a funnel whose rows are categories — "D12 · 53" was landing
+  on 187 names, and "Not involved · 121" on 449. A row now links by the exact
+  category it counted, and the destination titles itself after that category
+  rather than "Custom cut". The rule stands; the cases that violated it are
+  fixed rather than excused. **Extended
+  2026-08-14:** where a panel shows a subset and the only worklist view is the
+  superset, the link label names the number it lands on — "All 32 movers in
+  Players" under a panel whose headline figure is the 15 who moved up. Say
+  which set the link returns; never let a count change silently between the
+  click and the page.
 
 ## Do's and Don'ts
 
@@ -361,6 +585,8 @@ meaning.
 - **Do** use tabular figures only for aligned columns and compact inline counters (queue position, future table columns) — never on a large standalone stat value.
 - **Do** reserve Success/Danger strictly for status, never as palette variety.
 - **Do** validate any new chart series color with `validate_palette.js` before shipping it — never eyeball CVD-safety.
+- **Do** print the figure the mark actually encodes: a share bar gets a percentage beside it and its raw count in the row's `title`.
+- **Do** measure a chart's `min-width` floor at 390px before trusting its `overflow-x-auto` wrapper to contain it.
 
 ### Don't:
 - **Don't** introduce a sidebar, or any chrome beyond the one documented top bar — no secondary toolbars, breadcrumbs, or decorative header content.
@@ -369,3 +595,5 @@ meaning.
 - **Don't** use white text on Ember; it fails contrast at this hue (~2.8:1) regardless of weight or size.
 - **Don't** reach for progress bars, completion badges, or celebratory motion — this is a chore tool, not a gamified habit app.
 - **Don't** stack a border, a shadow, and a background-color shift on the same card edge; borders and the one shadow work together, a background shift never joins them (surface and canvas share the same white).
+- **Don't** build a second panel for a reading that shares another's columns and differs only in ranking, filter, or normalisation — that is one component with a switch (The Switch-In-Place Rule).
+- **Don't** give a chart a second colour pair for a distinction the segment palette already carries (The Borrowed Legend Rule).

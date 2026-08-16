@@ -6,7 +6,7 @@
 
 import "server-only";
 import { nanoid } from "nanoid";
-import { appendRows, readTab, updateRows } from "./sheets";
+import { appendRows, readTab, revalidateSheets, updateRows } from "./sheets";
 import { normalizeEmail } from "./fuzzy";
 import type { GameNight, Participation, Player } from "./types";
 
@@ -25,6 +25,9 @@ const GAME_NIGHT_HEADERS = [
   "game_night_id", "game_night_date", "uploaded_at", "uploaded_by", "source_filename",
   "row_count", "auto_confirmed_count", "flagged_count",
   "resolved_link_existing_count", "resolved_add_new_count", "resolved_skip_count",
+  // Set only when a door check-in list has been uploaded for this night.
+  // Blank means "no file yet", which is NOT the same as "nobody came".
+  "attendance_uploaded_at", "attendance_source_filename", "attendance_count",
 ];
 
 const PARTICIPATION_HEADERS = [
@@ -33,6 +36,9 @@ const PARTICIPATION_HEADERS = [
   // Point-in-time discipleship status, as answered on this night's form.
   // Added 2026-08-11 — rows written before then leave these blank.
   "dgroup_status", "dgroup_interested_in_joining", "dgroup_leading_willing_to_absorb",
+  // Door check-in, added 2026-08-12. `registered` is TRUE on every row
+  // written before then — they all came from a registration file.
+  "attended_at", "attended_sport", "registered",
 ];
 
 function rowToPlayer(row: Record<string, string>): Player {
@@ -46,9 +52,16 @@ function rowToPlayer(row: Record<string, string>): Player {
     playerId: row.player_id,
     firstName: row.first_name,
     lastName: row.last_name,
-    nickname: row.nickname || undefined,
+    // `Nickname` and `Mobile Number` were never added to COLUMN_MAP, so the
+    // parser swept both into `raw` and left these columns blank on every row
+    // ever written (0 of 1081 for nickname, though 1080 of them answered).
+    // The values are there; read through to them rather than requiring a
+    // re-upload of the whole season to surface data we already hold. Both are
+    // mapped properly for new uploads as of 2026-08-12 — this fallback is for
+    // everything written before that.
+    nickname: row.nickname || raw["Nickname"] || undefined,
     email: row.email,
-    mobileNumber: row.mobile_number || undefined,
+    mobileNumber: row.mobile_number || raw["Mobile Number"] || undefined,
     gender: row.gender || undefined,
     civilStatus: row.civil_status || undefined,
     dgroupMemberStatus: (row.dgroup_member_status || undefined) as Player["dgroupMemberStatus"],
@@ -98,6 +111,9 @@ function rowToGameNight(row: Record<string, string>): GameNight {
     resolvedLinkExistingCount: Number(row.resolved_link_existing_count || 0),
     resolvedAddNewCount: Number(row.resolved_add_new_count || 0),
     resolvedSkipCount: Number(row.resolved_skip_count || 0),
+    attendanceUploadedAt: row.attendance_uploaded_at || undefined,
+    attendanceSourceFilename: row.attendance_source_filename || undefined,
+    attendanceCount: row.attendance_uploaded_at ? Number(row.attendance_count || 0) : undefined,
   };
 }
 
@@ -114,6 +130,9 @@ function gameNightToRow(gn: GameNight): Record<string, unknown> {
     resolved_link_existing_count: gn.resolvedLinkExistingCount,
     resolved_add_new_count: gn.resolvedAddNewCount,
     resolved_skip_count: gn.resolvedSkipCount,
+    attendance_uploaded_at: gn.attendanceUploadedAt ?? "",
+    attendance_source_filename: gn.attendanceSourceFilename ?? "",
+    attendance_count: gn.attendanceCount ?? "",
   };
 }
 
@@ -129,6 +148,11 @@ function rowToParticipation(row: Record<string, string>): Participation {
     dgroupStatus: (row.dgroup_status || undefined) as Participation["dgroupStatus"],
     dgroupInterestedInJoining: (row.dgroup_interested_in_joining || undefined) as Participation["dgroupInterestedInJoining"],
     dgroupLeadingWillingToAbsorb: row.dgroup_leading_willing_to_absorb || undefined,
+    attendedAt: row.attended_at || undefined,
+    attendedSport: row.attended_sport || undefined,
+    // Every row written before attendance existed came from a registration
+    // file, so a blank here reads as registered rather than as a walk-in.
+    registered: row.registered !== "FALSE",
   };
 }
 
@@ -144,6 +168,9 @@ function participationToRow(p: Participation): Record<string, unknown> {
     dgroup_status: p.dgroupStatus ?? "",
     dgroup_interested_in_joining: p.dgroupInterestedInJoining ?? "",
     dgroup_leading_willing_to_absorb: p.dgroupLeadingWillingToAbsorb ?? "",
+    attended_at: p.attendedAt ?? "",
+    attended_sport: p.attendedSport ?? "",
+    registered: p.registered ? "TRUE" : "FALSE",
   };
 }
 
@@ -204,6 +231,57 @@ export function buildParticipation(input: Omit<Participation, "participationId">
   return { ...input, participationId: `part_${nanoid(8)}` };
 }
 
+export interface ParticipationWithRow {
+  participation: Participation;
+  sheetRow: number;
+}
+
+/** Row numbers included, so a check-in can be written onto an existing row. */
+export async function listParticipationsWithRows(): Promise<ParticipationWithRow[]> {
+  const rows = await readTab(PARTICIPATIONS_TAB);
+  return rows.map((r) => ({ participation: rowToParticipation(r.row), sheetRow: r.sheetRow }));
+}
+
+export async function findGameNightWithRow(
+  gameNightDate: string,
+): Promise<{ gameNight: GameNight; sheetRow: number } | undefined> {
+  const rows = await readTab(GAME_NIGHTS_TAB);
+  const hit = rows.find((r) => r.row.game_night_date === gameNightDate);
+  return hit ? { gameNight: rowToGameNight(hit.row), sheetRow: hit.sheetRow } : undefined;
+}
+
+/**
+ * Marks a night's check-ins. Three writes at most, never one per person:
+ * existing rows are updated in place, walk-ins are appended, and the game
+ * night's own row records that a file arrived at all.
+ */
+export async function commitAttendanceToSheets(input: {
+  gameNight: GameNight;
+  gameNightSheetRow: number;
+  updated: ParticipationWithRow[];
+  walkIns: Participation[];
+}): Promise<void> {
+  await Promise.all([
+    updateRows(GAME_NIGHTS_TAB, GAME_NIGHT_HEADERS, [
+      { sheetRow: input.gameNightSheetRow, row: gameNightToRow(input.gameNight) },
+    ]),
+    input.updated.length > 0
+      ? updateRows(
+          PARTICIPATIONS_TAB,
+          PARTICIPATION_HEADERS,
+          input.updated.map((u) => ({ sheetRow: u.sheetRow, row: participationToRow(u.participation) })),
+        )
+      : Promise.resolve(),
+    input.walkIns.length > 0
+      ? appendRows(PARTICIPATIONS_TAB, PARTICIPATION_HEADERS, input.walkIns.map(participationToRow))
+      : Promise.resolve(),
+  ]);
+
+  // The rows just changed; drop the cached reads so the next page
+  // render sees this upload instead of the pre-upload snapshot.
+  revalidateSheets();
+}
+
 export function buildGameNight(input: Omit<GameNight, "gameNightId">): GameNight {
   return { ...input, gameNightId: `gn_${nanoid(8)}` };
 }
@@ -233,4 +311,8 @@ export async function commitBatchToSheets(input: {
       (input.refreshedPlayers ?? []).map((u) => ({ sheetRow: u.sheetRow, row: playerToRow(u.player) })),
     ),
   ]);
+
+  // The rows just changed; drop the cached reads so the next page
+  // render sees this upload instead of the pre-upload snapshot.
+  revalidateSheets();
 }

@@ -4,6 +4,7 @@
 // Server-only: the service-account key must never reach the client.
 
 import "server-only";
+import { unstable_cache, updateTag } from "next/cache";
 import { google, sheets_v4 } from "googleapis";
 
 const SHEET_ID = process.env.GOOGLE_SHEET_ID;
@@ -31,8 +32,33 @@ function getClient(): sheets_v4.Sheets {
   return client;
 }
 
+/**
+ * The cache tag every tab read is stored under. One tag, not one per tab: a
+ * write to any tab can change what another one means (a new player and the
+ * participation that created it land together), so they expire together.
+ */
+export const SHEETS_TAG = "sheets";
+
+/**
+ * How long a read may be reused. Measured 2026-08-16: three parallel tab
+ * reads cost 904–1450ms, which was essentially the whole server render — the
+ * aggregation over 1,080 players and 2,885 participations does not register
+ * beside it.
+ *
+ * Five minutes is chosen against the read quota rather than against
+ * staleness. Uploads land weekly, so any TTL under an hour is invisible to
+ * correctness; what the app actually needed was for a burst of page views —
+ * a volunteer head opening four surfaces after a game night — to cost one
+ * round-trip instead of twelve. The per-minute read quota is reachable
+ * otherwise, and a quota error renders as a raw runtime error page.
+ *
+ * Writes do not wait for it to expire: `revalidateSheets()` clears the tag,
+ * so an admin sees their own upload immediately.
+ */
+const READ_TTL_SECONDS = 300;
+
 /** Reads every data row (below the frozen header) as header-keyed objects. */
-export async function readTab(tabName: string): Promise<{ row: Record<string, string>; sheetRow: number }[]> {
+async function fetchTab(tabName: string): Promise<{ row: Record<string, string>; sheetRow: number }[]> {
   const sheets = getClient();
   const res = await sheets.spreadsheets.values.get({
     spreadsheetId: SHEET_ID,
@@ -49,6 +75,38 @@ export async function readTab(tabName: string): Promise<{ row: Record<string, st
     });
     return { row, sheetRow: i + 2 }; // +2: 1-indexed, plus the header row itself
   });
+}
+
+/**
+ * The read every caller uses. Cached per tab so that opening the dashboard,
+ * the directory and the match board in one sitting costs one round-trip per
+ * tab rather than one per page.
+ *
+ * Cached at this level deliberately: `listPlayers` and `listPlayersWithRows`
+ * are two shapes of the same fetch, and caching the shapes separately would
+ * pay for the same rows twice.
+ */
+export const readTab = unstable_cache(fetchTab, ["sheets-tab"], {
+  tags: [SHEETS_TAG],
+  revalidate: READ_TTL_SECONDS,
+});
+
+/**
+ * Drops every cached tab read. Call after any write, from the server action
+ * that made it — without this an admin would upload a roster and then watch
+ * the dashboard report the old numbers for five minutes, which is exactly the
+ * kind of quiet wrongness this app refuses everywhere else.
+ *
+ * `updateTag`, not `revalidateTag`. The latter now defaults to
+ * stale-while-revalidate, which serves the pre-upload numbers once more while
+ * it refetches — the one moment in this app where showing stale data is least
+ * acceptable, because the admin is looking for the rows they just added.
+ * `updateTag` expires immediately and makes the next read blocking, which is
+ * the read-your-own-writes behaviour an upload needs. It is Server
+ * Action-only, and both callers are server actions.
+ */
+export function revalidateSheets(): void {
+  updateTag(SHEETS_TAG);
 }
 
 /** Appends rows in a single API call — always batch, never one call per row. */

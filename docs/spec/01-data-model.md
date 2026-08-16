@@ -60,7 +60,7 @@ System/meta (not from the form):
 | `player_id` | string | Stable internal id, assigned on first insert. Join key for `Participations`. |
 | `first_seen_game_night_id` | string | FK to `Game Nights` — when this person was first ever seen. |
 | `first_seen_at` | datetime | System-assigned. |
-| `last_updated_at` | datetime | System-assigned. **Revised 2026-08-11:** bumped whenever a returning player's re-submitted form carries a *changed* answer in any refreshable field (see below). Unchanged when they answered the same as before, so this reads "when their answers last moved", not "when we last saw them" — last seen is derivable from `Participations`. |
+| `last_updated_at` | datetime | System-assigned. **Revised 2026-08-11:** bumped whenever a returning player's re-submitted form carries a *changed* answer in a refreshable field (see below) **and** that submission is chronologically the latest game night on record for them — an older night uploaded after newer ones (a backfill, a rediscovered export) writes its `Participations` row as always, but does not touch this snapshot. So this reads "when the most recent known answers last moved", not "when we last saw them" — last seen is derivable from `Participations`. |
 
 Identity:
 
@@ -68,10 +68,10 @@ Identity:
 |---|---|
 | `first_name` | First Name |
 | `last_name` | Last Name |
-| `nickname` | Nickname |
+| `nickname` | Nickname — see the note below |
 | `email` | Email Address (fallback: Email Address 2) — normalized, the dedup key |
 | `email_raw_secondary` | Email Address 2 / Confirm Email Address, kept for reference |
-| `mobile_number` | Mobile Number |
+| `mobile_number` | Mobile Number — see the note below |
 | `birth_month` | Birth Month |
 | `birth_year` | Birth Year |
 | `gender` | Gender |
@@ -81,6 +81,61 @@ Identity:
 | `languages` | Spoken and written language used |
 | `profession` | Your Profession/Work |
 | `workplace_area` | Your Workplace Area |
+
+> **`nickname` and `mobile_number` were specified but never mapped — fixed
+> 2026-08-12.** Both had a `Players` column and a store mapping from the
+> start, but neither was ever added to `COLUMN_MAP`, so the parser swept them
+> into `raw_json` and wrote both columns blank on every row: **0 of 1081**
+> players had a nickname stored, while **1080 of 1081** had actually answered
+> the question. `lib/column-map.ts` now claims both, so new uploads populate
+> them properly, and `rowToPlayer` reads through to `raw` for everything
+> written before the fix — no re-upload needed, the data was never lost.
+>
+> Nickname is load-bearing rather than cosmetic here: people in this ministry
+> are known by it ("Patz", not "Patrick Christian"), so the directory shows it
+> and searches it. It is **not** a dedup key — matching still runs on
+> first/last/email only (`lib/match.ts`), so a changed nickname can never
+> split or merge a person.
+
+## DGroup preference fields — promoted to first-class use 2026-08-14
+
+Seven form fields describe the *shape* of a discipleship group. They exist in
+three parallel sets, and which set a person answers depends on where they
+stand — a leader describes the group they run, a would-be leader the one they
+plan to run, a seeker the one they want to join.
+
+| Dimension | Leading (184) | Plan to lead (126) | Plan to join (86) |
+|---|---|---|---|
+| Days | `Which days are you leading your discipleship group?` | `…planning to lead…` | `…planning to join…` |
+| Time | `Time of Discipleship Group you are leading` | `…you plan to lead` | `…you plan to join` |
+| Age range | `Age range of Discipleship Group you are leading` | `…you plan to lead` | `…you plan to join` |
+| Location | `Location of Discipleship Group your are leading` | `…you plan to lead` | `…you plan to join` |
+| Type/setup | `Type of Discipleship Group you are leading` | `…you plan to lead` | `…you plan to join` |
+| Language | `Language of Discipleship Group your are leading` | `…you plan to lead` | `…your plan to join` |
+| Marital status | `Marital Status of Discipleship Group your are leading` | `…you plan to lead` | — |
+
+**The typos are in the source and must be matched exactly.** `Location of
+Discipleship Group *your* are leading`, `Language of Discipleship Group *your*
+plan to join` — reading these keys is only reliable if the misspelling is
+reproduced verbatim. Do not "correct" them.
+
+All of them live in `raw_json` only; none has a typed column. That is
+deliberate for now — they are read by `lib/matching.ts` and by the dashboard's
+supply-against-demand panel, and neither needs them indexed.
+
+**Value shapes, measured 2026-08-14:**
+
+- **Days** — comma-separated multi-select (`Sunday, Saturday`). Split on
+  `[,;]` before counting, or Sunday-plus-Saturday reads as its own category.
+- **Time** — an **Excel serial date**: `1899-12-30T11:00:00.000Z`. The hour is
+  read off the string and **never timezone-converted**, the same rule that
+  governs `attendedAt`. Passing it through `new Date()` shifts every group's
+  meeting time by the runtime's offset.
+- **Age range** — free text, and inconsistent between the two sides. Leaders
+  write ranges (`25-35`, `25-30`); seekers frequently write a single age
+  (`23`, `27`). `parseAgeRange` in `lib/matching.ts` handles both.
+- **Location, type, language, marital status** — controlled vocabularies, safe
+  to count as given after trimming.
 
 Emergency contact:
 
@@ -179,10 +234,19 @@ attendance history, not just an audit log.
 
 ## Tab: `Participations`
 
-**Append-only.** One row per player per game night. Never updated or
-overwritten — this table *is* the attendance history, and every returnee/
-first-timer/frequency metric in [03-dashboard.md](03-dashboard.md) is computed
-from it.
+One row per player per game night. This table *is* the **registration**
+history, and every returnee/first-timer/frequency metric in
+[03-dashboard.md](03-dashboard.md) is computed from it.
+
+> **Registering and attending are different events — corrected 2026-08-12.**
+> This table was documented as "the attendance history" and it never was. On
+> 2026-05-30, **183 people registered and 131 checked in at the door — a 56%
+> show-up rate**, so everything the app called attendance overstated it by
+> nearly a factor of two.
+>
+> Rows are still append-only *from registration*. A check-in file later writes
+> `attended_at`, `attended_sport`, and (for a walk-in) a whole row with
+> `registered = FALSE` — see [06-attendance.md](06-attendance.md).
 
 > **Why discipleship status is duplicated here.** `Players` holds a person's
 > *current* standing — one row, overwritten as they change. That cannot answer

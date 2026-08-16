@@ -50,6 +50,18 @@ export interface GameNight {
   uploadedBy: string;
   sourceFilename: string;
   rowCount: number;
+
+  /**
+   * Set only once a door check-in list has been uploaded for this night.
+   *
+   * Load-bearing, not bookkeeping: without it there is no way to tell "we
+   * have the check-in file and 80 people did not come" from "we have no file
+   * for this night". A night with no file must never render as nobody
+   * attending — the same trap the discipleship capture-gap fell into.
+   */
+  attendanceUploadedAt?: string;
+  attendanceSourceFilename?: string;
+  attendanceCount?: number;
   autoConfirmedCount: number;
   flaggedCount: number;
   resolvedLinkExistingCount: number;
@@ -79,6 +91,23 @@ export interface Participation {
   dgroupStatus?: DGroupStatus;
   dgroupInterestedInJoining?: DGroupInterest;
   dgroupLeadingWillingToAbsorb?: string;
+
+  /**
+   * Registering and turning up are different events, and the gap is large:
+   * on 2026-05-30, 183 people registered and 131 checked in — a 56% show-up
+   * rate. Everything this app called "attendance" before 2026-08-12 was
+   * really registration.
+   *
+   * `attendedAt` is the door check-in time, kept at full precision because
+   * arrival spreads across the evening (5:33pm to 8:28pm on May 30) and that
+   * curve is worth charting. **Never timezone-convert it** — the hour as
+   * written is the local hour, exactly like the DGroup time fields.
+   */
+  attendedAt?: string;
+  /** Sport from the check-in list, which can differ from the one registered. */
+  attendedSport?: string;
+  /** False for a walk-in: someone who checked in without registering. */
+  registered: boolean;
 }
 
 /** One row as parsed off the incoming sheet, before matching. */
@@ -86,6 +115,8 @@ export interface IncomingRow {
   rowIndex: number;
   firstName: string;
   lastName: string;
+  nickname?: string;
+  mobileNumber?: string;
   email: string;
   gender?: string;
   civilStatus?: string;
@@ -110,3 +141,14 @@ export type ReviewAction =
   | { kind: "linkExisting"; playerId: string }
   | { kind: "addNew" }
   | { kind: "skip" };
+
+/** One check-in, parsed from the door list's "Last, First 🏐" string. */
+export interface IncomingAttendanceRow {
+  rowIndex: number;
+  /** Verbatim cell, kept so a review card can show what was actually typed. */
+  raw: string;
+  lastName: string;
+  firstName: string;
+  sport?: string;
+  checkedInAt: string;
+}

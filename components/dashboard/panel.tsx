@@ -1,39 +1,9 @@
-import type { ReactNode } from "react";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { clsx } from "@/lib/clsx";
+import { Panel } from "@/components/ui/panel";
 
-/**
- * The analyst-register container: a white panel on the grey page ground,
- * hairline border, no lift. Depth is carried by the ground/panel contrast
- * rather than by shadow, which is what lets panels sit shoulder-to-shoulder
- * at this density without the page reading as a pile of cards.
- */
-export function Panel({ className, children }: { className?: string; children: ReactNode }) {
-  return (
-    <div className={clsx("rounded-xl border border-border bg-surface", className)}>{children}</div>
-  );
-}
-
-export function PanelHeader({
-  title,
-  subtitle,
-  action,
-}: {
-  title: string;
-  subtitle?: string;
-  action?: ReactNode;
-}) {
-  return (
-    <div className="flex items-start justify-between gap-4 border-b border-border px-5 py-4">
-      <div className="min-w-0">
-        <h2 className="text-[15px] font-semibold tracking-[-0.01em] text-ink">{title}</h2>
-        {subtitle ? <p className="mt-1 text-[13px] leading-relaxed text-ink-secondary">{subtitle}</p> : null}
-      </div>
-      {action ? <div className="shrink-0">{action}</div> : null}
-    </div>
-  );
-}
+export { Panel, PanelHeader } from "@/components/ui/panel";
 
 export interface MetricSubStat {
   label: string;
@@ -57,6 +27,7 @@ export function MetricPanel({
   href,
   hrefLabel,
   accent = false,
+  className,
 }: {
   label: string;
   value: number | string;
@@ -65,9 +36,11 @@ export function MetricPanel({
   href?: string;
   hrefLabel?: string;
   accent?: boolean;
+  /** Grid placement, for the metric panels that sit inside a bento. */
+  className?: string;
 }) {
   return (
-    <Panel className="flex flex-col p-5">
+    <Panel className={clsx("flex flex-col p-5", className)}>
       <div className="text-[13px] font-medium text-ink-secondary">{label}</div>
       <div
         className={clsx(
@@ -101,7 +74,7 @@ export function MetricPanel({
       {href ? (
         <Link
           href={href}
-          className="mt-3 inline-flex items-center gap-1 self-start rounded-[5px] text-[12px] font-medium text-accent-ink underline decoration-accent/40 underline-offset-2 outline-none hover:decoration-accent focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
+          className="mt-3 inline-flex items-center gap-1 self-start rounded-[5px] text-[12px] font-medium text-accent-ink underline decoration-accent/40 underline-offset-2 outline-none hover:decoration-accent focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-surface pointer-coarse:min-h-11"
         >
           {hrefLabel ?? "See the list"}
           <ArrowRight className="size-3" strokeWidth={2.5} aria-hidden />

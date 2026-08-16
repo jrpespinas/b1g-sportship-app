@@ -3,10 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { clsx } from "@/lib/clsx";
 import type { DGroupSegment } from "@/lib/dgroup";
 import type { TopReturningPlayer } from "@/lib/dashboard-metrics";
-
-function displayName(row: { firstName: string; lastName: string }) {
-  return `${row.firstName} ${row.lastName}`.trim();
-}
+import { formatName } from "@/lib/player-name";
 
 // Tone follows what the row asks someone to DO, not how "good" it is:
 // accent marks the rows worth acting on. A regular attender in no group is
@@ -55,7 +52,7 @@ export function Leaderboard({ players }: { players: TopReturningPlayer[] }) {
                       href={`/players/${row.player.playerId}`}
                       className="rounded-[5px] font-medium text-ink outline-none hover:underline focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
                     >
-                      {displayName(row.player)}
+                      {formatName(row.player)}
                     </Link>
                   </td>
                   <td className={clsx("py-2.5 tabular-nums text-ink", isLast && "pb-4")}>{row.gameNightCount}</td>

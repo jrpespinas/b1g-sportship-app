@@ -1,64 +1,360 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-08-07T00:00:00.000Z",
+  "generatedAt": "2026-08-15T06:18:13.922Z",
   "title": "Design System: B1G Sportship — Player Inventory",
   "extensions": {
     "colorMeta": {
       "ember": {
         "role": "primary",
         "displayName": "Ember",
-        "canonical": "#FF6F2F",
-        "tonalRamp": ["#FFF1E8", "#FFD9BE", "#FFB98A", "#FF9457", "#FF6F2F", "#E0551A", "#B84412", "#7A2D0C"]
+        "canonical": "#ff6f2f",
+        "tonalRamp": [
+          "oklch(15% 0.191 41.8)",
+          "oklch(27% 0.191 41.8)",
+          "oklch(39% 0.191 41.8)",
+          "oklch(51% 0.191 41.8)",
+          "oklch(63% 0.191 41.8)",
+          "oklch(75% 0.191 41.8)",
+          "oklch(87% 0.191 41.8)",
+          "oklch(95% 0.191 41.8)"
+        ]
       },
       "graphite": {
         "role": "neutral",
         "displayName": "Graphite",
-        "canonical": "#1D1D1F",
-        "tonalRamp": ["#F5F5F7", "#E5E5E7", "#D2D2D7", "#A1A1A6", "#6E6E73", "#48484D", "#2C2C2E", "#1D1D1F"]
+        "canonical": "#1d1d1f",
+        "tonalRamp": [
+          "oklch(15% 0.004 286.1)",
+          "oklch(27% 0.004 286.1)",
+          "oklch(39% 0.004 286.1)",
+          "oklch(51% 0.004 286.1)",
+          "oklch(63% 0.004 286.1)",
+          "oklch(75% 0.004 286.1)",
+          "oklch(87% 0.004 286.1)",
+          "oklch(95% 0.004 286.1)"
+        ]
       },
       "success": {
         "role": "status",
-        "displayName": "Success Green",
-        "canonical": "#1A7F4B",
-        "tonalRamp": ["#EAF7F0", "#C5EBD7", "#8FD6AF", "#57BE85", "#1A7F4B", "#166A3F", "#125533", "#0D3D25"]
+        "displayName": "Success",
+        "canonical": "#1a7f4b",
+        "tonalRamp": [
+          "oklch(15% 0.121 155.0)",
+          "oklch(27% 0.121 155.0)",
+          "oklch(39% 0.121 155.0)",
+          "oklch(51% 0.121 155.0)",
+          "oklch(63% 0.121 155.0)",
+          "oklch(75% 0.121 155.0)",
+          "oklch(87% 0.121 155.0)",
+          "oklch(95% 0.121 155.0)"
+        ]
       },
       "danger": {
         "role": "status",
-        "displayName": "Danger Red",
-        "canonical": "#D92D20",
-        "tonalRamp": ["#FEF3F2", "#FBD3CE", "#F5988A", "#EB6152", "#D92D20", "#B3241A", "#8C1C14", "#63140E"]
+        "displayName": "Danger",
+        "canonical": "#d92d20",
+        "tonalRamp": [
+          "oklch(15% 0.209 29.5)",
+          "oklch(27% 0.209 29.5)",
+          "oklch(39% 0.209 29.5)",
+          "oklch(51% 0.209 29.5)",
+          "oklch(63% 0.209 29.5)",
+          "oklch(75% 0.209 29.5)",
+          "oklch(87% 0.209 29.5)",
+          "oklch(95% 0.209 29.5)"
+        ]
       },
       "series-returnee": {
-        "role": "chart-series",
+        "role": "chart",
         "displayName": "Returnee Blue",
-        "canonical": "#2A78D6",
-        "tonalRamp": ["#CDE2FB", "#9EC5F4", "#6DA7EC", "#3987E5", "#2A78D6", "#1C5CAB", "#104281", "#0D366B"]
+        "canonical": "#2a78d6",
+        "tonalRamp": [
+          "oklch(15% 0.163 255.5)",
+          "oklch(27% 0.163 255.5)",
+          "oklch(39% 0.163 255.5)",
+          "oklch(51% 0.163 255.5)",
+          "oklch(63% 0.163 255.5)",
+          "oklch(75% 0.163 255.5)",
+          "oklch(87% 0.163 255.5)",
+          "oklch(95% 0.163 255.5)"
+        ]
       },
       "series-firsttimer": {
-        "role": "chart-series",
-        "displayName": "First-Timer Ember",
-        "canonical": "#FF6F2F",
-        "tonalRamp": ["#FFF1E8", "#FFD9BE", "#FFB98A", "#FF9457", "#FF6F2F", "#E0551A", "#B84412", "#7A2D0C"]
+        "role": "chart",
+        "displayName": "First-timer Ember",
+        "canonical": "#ff6f2f",
+        "tonalRamp": [
+          "oklch(15% 0.191 41.8)",
+          "oklch(27% 0.191 41.8)",
+          "oklch(39% 0.191 41.8)",
+          "oklch(51% 0.191 41.8)",
+          "oklch(63% 0.191 41.8)",
+          "oklch(75% 0.191 41.8)",
+          "oklch(87% 0.191 41.8)",
+          "oklch(95% 0.191 41.8)"
+        ]
+      },
+      "series-neutral": {
+        "role": "chart",
+        "displayName": "Neutral Aqua",
+        "canonical": "#1baf7a",
+        "tonalRamp": [
+          "oklch(15% 0.141 162.1)",
+          "oklch(27% 0.141 162.1)",
+          "oklch(39% 0.141 162.1)",
+          "oklch(51% 0.141 162.1)",
+          "oklch(63% 0.141 162.1)",
+          "oklch(75% 0.141 162.1)",
+          "oklch(87% 0.141 162.1)",
+          "oklch(95% 0.141 162.1)"
+        ]
+      },
+      "seg-leaders": {
+        "role": "chart",
+        "displayName": "Leaders Navy",
+        "canonical": "#082c57",
+        "tonalRamp": [
+          "oklch(15% 0.087 255.7)",
+          "oklch(27% 0.087 255.7)",
+          "oklch(39% 0.087 255.7)",
+          "oklch(51% 0.087 255.7)",
+          "oklch(63% 0.087 255.7)",
+          "oklch(75% 0.087 255.7)",
+          "oklch(87% 0.087 255.7)",
+          "oklch(95% 0.087 255.7)"
+        ]
+      },
+      "seg-members": {
+        "role": "chart",
+        "displayName": "Members Blue",
+        "canonical": "#256abf",
+        "tonalRamp": [
+          "oklch(15% 0.150 255.9)",
+          "oklch(27% 0.150 255.9)",
+          "oklch(39% 0.150 255.9)",
+          "oklch(51% 0.150 255.9)",
+          "oklch(63% 0.150 255.9)",
+          "oklch(75% 0.150 255.9)",
+          "oklch(87% 0.150 255.9)",
+          "oklch(95% 0.150 255.9)"
+        ]
+      },
+      "seg-seekers": {
+        "role": "chart",
+        "displayName": "Seekers Burnt Orange",
+        "canonical": "#c2410c",
+        "tonalRamp": [
+          "oklch(15% 0.174 38.4)",
+          "oklch(27% 0.174 38.4)",
+          "oklch(39% 0.174 38.4)",
+          "oklch(51% 0.174 38.4)",
+          "oklch(63% 0.174 38.4)",
+          "oklch(75% 0.174 38.4)",
+          "oklch(87% 0.174 38.4)",
+          "oklch(95% 0.174 38.4)"
+        ]
+      },
+      "seg-uninvolved": {
+        "role": "chart",
+        "displayName": "Not-involved Peach",
+        "canonical": "#f7c4a3",
+        "tonalRamp": [
+          "oklch(15% 0.073 54.4)",
+          "oklch(27% 0.073 54.4)",
+          "oklch(39% 0.073 54.4)",
+          "oklch(51% 0.073 54.4)",
+          "oklch(63% 0.073 54.4)",
+          "oklch(75% 0.073 54.4)",
+          "oklch(87% 0.073 54.4)",
+          "oklch(95% 0.073 54.4)"
+        ]
+      },
+      "page": {
+        "role": "neutral",
+        "displayName": "Analyst Ground",
+        "canonical": "#f4f5f7",
+        "tonalRamp": [
+          "oklch(15% 0.003 264.5)",
+          "oklch(27% 0.003 264.5)",
+          "oklch(39% 0.003 264.5)",
+          "oklch(51% 0.003 264.5)",
+          "oklch(63% 0.003 264.5)",
+          "oklch(75% 0.003 264.5)",
+          "oklch(87% 0.003 264.5)",
+          "oklch(95% 0.003 264.5)"
+        ]
+      },
+      "blue-1": {
+        "role": "neutral",
+        "displayName": "Sequential Blue 1",
+        "canonical": "#d9eaff",
+        "tonalRamp": [
+          "#d9eaff",
+          "#aacdfb",
+          "#73a7ec",
+          "#2f6fc2",
+          "#134c8f",
+          "#082c57"
+        ]
+      },
+      "blue-2": {
+        "role": "neutral",
+        "displayName": "Sequential Blue 2",
+        "canonical": "#aacdfb",
+        "tonalRamp": [
+          "#d9eaff",
+          "#aacdfb",
+          "#73a7ec",
+          "#2f6fc2",
+          "#134c8f",
+          "#082c57"
+        ]
+      },
+      "blue-3": {
+        "role": "neutral",
+        "displayName": "Sequential Blue 3",
+        "canonical": "#73a7ec",
+        "tonalRamp": [
+          "#d9eaff",
+          "#aacdfb",
+          "#73a7ec",
+          "#2f6fc2",
+          "#134c8f",
+          "#082c57"
+        ]
+      },
+      "blue-4": {
+        "role": "neutral",
+        "displayName": "Sequential Blue 4",
+        "canonical": "#2f6fc2",
+        "tonalRamp": [
+          "#d9eaff",
+          "#aacdfb",
+          "#73a7ec",
+          "#2f6fc2",
+          "#134c8f",
+          "#082c57"
+        ]
+      },
+      "blue-5": {
+        "role": "neutral",
+        "displayName": "Sequential Blue 5",
+        "canonical": "#134c8f",
+        "tonalRamp": [
+          "#d9eaff",
+          "#aacdfb",
+          "#73a7ec",
+          "#2f6fc2",
+          "#134c8f",
+          "#082c57"
+        ]
+      },
+      "blue-6": {
+        "role": "neutral",
+        "displayName": "Sequential Blue 6",
+        "canonical": "#082c57",
+        "tonalRamp": [
+          "#d9eaff",
+          "#aacdfb",
+          "#73a7ec",
+          "#2f6fc2",
+          "#134c8f",
+          "#082c57"
+        ]
+      },
+      "series-noshow": {
+        "role": "tertiary",
+        "displayName": "No-Show Clay",
+        "canonical": "#d98b5f",
+        "tonalRamp": [
+          "oklch(15% 0.112 49.6)",
+          "oklch(27% 0.112 49.6)",
+          "oklch(39% 0.112 49.6)",
+          "oklch(51% 0.112 49.6)",
+          "oklch(63% 0.112 49.6)",
+          "oklch(75% 0.112 49.6)",
+          "oklch(87% 0.112 49.6)",
+          "oklch(95% 0.112 49.6)"
+        ]
+      },
+      "seg-unrecorded": {
+        "role": "neutral",
+        "displayName": "Unrecorded Grey",
+        "canonical": "#b4b4bb",
+        "tonalRamp": [
+          "oklch(15% 0.005 286)",
+          "oklch(27% 0.005 286)",
+          "oklch(39% 0.005 286)",
+          "oklch(51% 0.005 286)",
+          "oklch(63% 0.005 286)",
+          "oklch(75% 0.005 286)",
+          "oklch(87% 0.005 286)",
+          "oklch(95% 0.005 286)"
+        ]
       }
     },
     "typographyMeta": {
-      "metric": { "displayName": "Metric", "purpose": "Stat card values only — the one number-forward size in the system." },
-      "headline": { "displayName": "Headline", "purpose": "Page-level titles, one per step (Upload / Possible duplicate / Batch resolved)." },
-      "title": { "displayName": "Title", "purpose": "Card-level primary content — submission and candidate names share this size deliberately, so neither is visually biased in the comparison." },
-      "body": { "displayName": "Body", "purpose": "Paragraphs, button labels, form input text." },
-      "label": { "displayName": "Label", "purpose": "Section labels, form field labels, and secondary meta lines — one size for every 'supporting text' tier, sentence case, no eyebrow treatment." },
-      "micro": { "displayName": "Micro", "purpose": "Badge text." },
-      "kbd": { "displayName": "Kbd", "purpose": "Keyboard-shortcut hint chips only — the floor of the scale." }
+      "figure": {
+        "displayName": "Figure",
+        "purpose": "The 34px headline number in an analyst-register metric panel."
+      },
+      "metric": {
+        "displayName": "Metric",
+        "purpose": "28px stat value on the original register."
+      },
+      "pageTitle": {
+        "displayName": "Page title",
+        "purpose": "24px page heading on the analyst register."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "26px page title on the original register."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "19px card-level name, e.g. a person in a review card."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "15px paragraphs, form inputs, and button labels."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "13px section labels, table cells, and analyst-register body copy."
+      },
+      "micro": {
+        "displayName": "Micro",
+        "purpose": "12px badge text, sub-figures, and legends."
+      },
+      "kbd": {
+        "displayName": "Kbd",
+        "purpose": "11px keyboard hint chips and chart axis labels — the floor of the scale."
+      }
     },
     "shadows": [
-      { "name": "card", "value": "0 1px 2px rgba(0,0,0,0.04), 0 4px 16px rgba(0,0,0,0.06)", "purpose": "The system's only shadow — ambient lift for every card, no hierarchy meaning." }
+      {
+        "name": "card",
+        "value": "0 1px 2px rgba(0,0,0,0.04), 0 4px 16px rgba(0,0,0,0.06)",
+        "purpose": "The system's only shadow — ambient lift for every card, no hierarchy meaning."
+      }
     ],
     "motion": [
-      { "name": "fade-in", "value": "translateY(4px) + opacity, 0.2s ease-out", "purpose": "Shared entrance for arriving at a new step (select, summary)." },
-      { "name": "advance-in", "value": "translateX(10px) + opacity, 0.18s ease-out", "purpose": "Signature transition reserved for advancing through the triage queue — reads as moving forward, distinct from a generic entrance." }
+      {
+        "name": "fade-in",
+        "value": "translateY(4px) + opacity, 0.2s ease-out",
+        "purpose": "Shared entrance for arriving at a new step (select, summary)."
+      },
+      {
+        "name": "advance-in",
+        "value": "translateX(10px) + opacity, 0.18s ease-out",
+        "purpose": "Signature transition reserved for advancing through the triage queue — reads as moving forward, distinct from a generic entrance."
+      }
     ],
     "breakpoints": [
-      { "name": "sm", "value": "640px" }
+      {
+        "name": "sm",
+        "value": "640px"
+      }
     ]
   },
   "components": [
@@ -66,41 +362,57 @@
       "name": "Primary Button",
       "kind": "button",
       "refersTo": "button-primary",
-      "description": "Main call to action per step (Process roster, etc). Ember fill with Graphite text — never white text, see the Ember Contrast Rule.",
-      "html": "<button class=\"ds-btn-primary\">Process roster</button>",
-      "css": ".ds-btn-primary { display: inline-flex; align-items: center; justify-content: center; gap: 8px; border-radius: 10px; padding: 10px 16px; font-size: 15px; font-weight: 500; background-color: #FF6F2F; color: #1D1D1F; transition: background-color 150ms ease-out, transform 150ms ease-out; } .ds-btn-primary:hover { background-color: #F2621F; } .ds-btn-primary:active { background-color: #E0551A; transform: scale(0.98); } .ds-btn-primary:disabled { opacity: 0.4; pointer-events: none; } .ds-btn-primary:focus-visible { outline: none; box-shadow: 0 0 0 2px #ffffff, 0 0 0 4px #FF6F2F; }"
+      "description": "Ember fill with graphite text — never white, per the Ember Contrast Rule.",
+      "html": "<button class=\"ds-btn-primary\">Confirm batch</button>",
+      "css": ".ds-btn-primary{background:var(--color-accent,#ff6f2f);color:var(--color-ink,#1d1d1f);border:none;border-radius:10px;padding:10px 16px;font:500 15px/1.5 -apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',Roboto,sans-serif;box-shadow:0 1px 2px rgba(0,0,0,.06);transition:background-color .15s ease-out,transform .15s ease-out}.ds-btn-primary:hover{background:#f2621f}.ds-btn-primary:active{background:#e0551a;transform:scale(.98)}.ds-btn-primary:focus-visible{outline:none;box-shadow:0 0 0 2px #fff,0 0 0 4px var(--color-accent,#ff6f2f)}"
     },
     {
-      "name": "Secondary Button",
+      "name": "Secondary Button (small)",
       "kind": "button",
-      "refersTo": "button-secondary",
-      "description": "Lower-emphasis action that still needs presence — e.g. a triage candidate's 'Same person' action.",
-      "html": "<button class=\"ds-btn-secondary\">Same person</button>",
-      "css": ".ds-btn-secondary { display: inline-flex; align-items: center; justify-content: center; gap: 8px; border-radius: 10px; padding: 10px 16px; font-size: 15px; font-weight: 500; background-color: #ffffff; color: #1D1D1F; border: 1px solid #D2D2D7; transition: background-color 150ms ease-out, transform 150ms ease-out; } .ds-btn-secondary:hover { background-color: #F5F5F7; } .ds-btn-secondary:active { transform: scale(0.98); }"
+      "refersTo": "button-secondary-sm",
+      "description": "The analyst register's compact control size — 13px, used for export and paging actions inside panel headers.",
+      "html": "<button class=\"ds-btn-sec-sm\">Export 41</button>",
+      "css": ".ds-btn-sec-sm{background:#fff;color:var(--color-ink,#1d1d1f);border:1px solid var(--color-border-strong,#d2d2d7);border-radius:8px;padding:8px 12px;font:500 13px/1.3 -apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',Roboto,sans-serif;transition:background-color .15s ease-out}.ds-btn-sec-sm:hover{background:var(--color-surface-subtle,#f5f5f7)}.ds-btn-sec-sm:active{transform:scale(.98)}.ds-btn-sec-sm:focus-visible{outline:none;box-shadow:0 0 0 2px #fff,0 0 0 4px var(--color-accent,#ff6f2f)}.ds-btn-sec-sm:disabled{opacity:.4;pointer-events:none}"
     },
     {
-      "name": "Ghost Button",
-      "kind": "button",
-      "refersTo": "button-ghost",
-      "description": "Lowest-emphasis action on a screen, e.g. 'Skip' in the triage queue.",
-      "html": "<button class=\"ds-btn-ghost\">Skip</button>",
-      "css": ".ds-btn-ghost { display: inline-flex; align-items: center; justify-content: center; gap: 8px; border-radius: 10px; padding: 10px 16px; font-size: 15px; font-weight: 500; background-color: transparent; color: #6E6E73; transition: background-color 150ms ease-out, color 150ms ease-out; } .ds-btn-ghost:hover { background-color: #F5F5F7; color: #1D1D1F; }"
-    },
-    {
-      "name": "Card",
+      "name": "Panel",
       "kind": "card",
-      "refersTo": "card",
-      "description": "The system's only container. Always the single ambient shadow plus a hairline border, never a background shift off canvas.",
-      "html": "<div class=\"ds-card\"><div class=\"ds-card-label\">This week's submission</div><div class=\"ds-card-title\">Miguel Santos</div></div>",
-      "css": ".ds-card { background: #ffffff; border: 1px solid #E5E5E7; border-radius: 16px; padding: 20px; box-shadow: 0 1px 2px rgba(0,0,0,0.04), 0 4px 16px rgba(0,0,0,0.06); } .ds-card-label { font-size: 13px; font-weight: 500; color: #6E6E73; } .ds-card-title { margin-top: 6px; font-size: 19px; font-weight: 600; color: #1D1D1F; }"
+      "refersTo": "panel",
+      "description": "The analyst-register container: white on the grey page ground, hairline border, NO shadow. Depth comes from ground-vs-panel contrast, which is what lets panels butt together at 12px gaps.",
+      "html": "<div class=\"ds-panel\"><div class=\"ds-panel-head\"><h2>Placing seekers</h2><p>Seekers are people asking for a group. Capacity is leaders who said they can take someone.</p></div><div class=\"ds-panel-body\">Content sits here.</div></div>",
+      "css": ".ds-panel{background:#fff;border:1px solid var(--color-border,#e5e5e7);border-radius:12px;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',Roboto,sans-serif}.ds-panel-head{border-bottom:1px solid var(--color-border,#e5e5e7);padding:16px 20px}.ds-panel-head h2{margin:0;font:600 15px/1.3 inherit;letter-spacing:-.01em;color:var(--color-ink,#1d1d1f)}.ds-panel-head p{margin:4px 0 0;font:400 13px/1.5 inherit;color:var(--color-ink-secondary,#6e6e73)}.ds-panel-body{padding:20px;font:400 13px/1.5 inherit;color:var(--color-ink,#1d1d1f)}"
     },
     {
-      "name": "Stat Card",
-      "kind": "card",
-      "refersTo": "card",
-      "description": "Card variant for the batch-summary and dashboard KPI grids — a label, a large proportional-figure number (never tabular-nums at this size), and an optional accent treatment on the value.",
-      "html": "<div class=\"ds-card ds-stat-card\"><div class=\"ds-card-label\">New players</div><div class=\"ds-stat-value ds-stat-value--accent\">4</div></div>",
-      "css": ".ds-stat-card { padding: 20px; } .ds-stat-value { margin-top: 6px; font-size: 28px; font-weight: 600; line-height: 1; color: #1D1D1F; } .ds-stat-value--accent { color: #C2450F; }"
+      "name": "Metric Panel",
+      "kind": "custom",
+      "refersTo": "panel",
+      "description": "A 34px figure with its required explanation line. The sentence is part of the component, not decoration — a bare number here invites the wrong read.",
+      "html": "<div class=\"ds-metric\"><div class=\"ds-metric-l\">Not in a group</div><div class=\"ds-metric-v\">489</div><p class=\"ds-metric-n\">Seekers raised their hand. The rest have not been asked.</p></div>",
+      "css": ".ds-metric{background:#fff;border:1px solid var(--color-border,#e5e5e7);border-radius:12px;padding:20px;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',Roboto,sans-serif}.ds-metric-l{font:500 13px/1.3 inherit;color:var(--color-ink-secondary,#6e6e73)}.ds-metric-v{margin-top:6px;font:600 34px/1 inherit;letter-spacing:-.02em;color:var(--color-ink,#1d1d1f)}.ds-metric-n{margin:12px 0 0;font:400 12px/1.5 inherit;color:var(--color-ink-secondary,#6e6e73)}"
+    },
+    {
+      "name": "Discipleship Segment Bands",
+      "kind": "custom",
+      "refersTo": "seg-leaders",
+      "description": "The five-segment stack: blue = placed, warm = unplaced, grey = never asked. Always rendered in pipeline order, never sorted by size — the order is the meaning. The grey band is deliberately colourless: a hue would place it on a journey that has not started.",
+      "html": "<div class=\"ds-seg\"><span style=\"background:#082c57\"></span><span style=\"background:#256abf\"></span><span style=\"background:#c2410c\"></span><span style=\"background:#f7c4a3\"></span><span style=\"background:#b4b4bb\"></span></div>",
+      "css": ".ds-seg{display:flex;gap:1px;height:12px;width:100%;border-radius:9999px;overflow:hidden}.ds-seg span{flex:1}"
+    },
+    {
+      "name": "View Chip",
+      "kind": "chip",
+      "refersTo": "button-secondary-sm",
+      "description": "A named worklist filter carrying its own live count. Active state is the accent tint — the one place Ember marks a control's state in this register.",
+      "html": "<button class=\"ds-chip\">Seekers <span>40</span></button> <button class=\"ds-chip ds-chip-on\">Leaders with capacity <span>148</span></button>",
+      "css": ".ds-chip{display:inline-flex;align-items:center;gap:8px;background:#fff;color:var(--color-ink-secondary,#6e6e73);border:1px solid var(--color-border,#e5e5e7);border-radius:9999px;padding:6px 12px;font:500 13px/1.3 -apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',Roboto,sans-serif;transition:background-color .15s ease-out,color .15s ease-out}.ds-chip span{opacity:.7;font-variant-numeric:tabular-nums}.ds-chip:hover{background:var(--color-surface-subtle,#f5f5f7);color:var(--color-ink,#1d1d1f)}.ds-chip-on{background:var(--color-accent-tint,#fff1e8);border-color:var(--color-accent,#ff6f2f);color:var(--color-accent-ink,#c2450f)}.ds-chip:focus-visible{outline:none;box-shadow:0 0 0 2px #fff,0 0 0 4px var(--color-accent,#ff6f2f)}"
+    },
+    {
+      "name": "Worklist Row",
+      "kind": "custom",
+      "refersTo": "panel",
+      "description": "A directory row: name in 'Last, First (Nickname)' form, standing badges, and the rare movement note. Movement rides inside the standing cell because it is true of only 32 of 1080 rows.",
+      "html": "<table class=\"ds-row\"><tbody><tr><td><a href=\"#\">Estacio, Patrick Christian (Patz)</a><div>patzestacio.cfpi@gmail.com</div></td><td><span class=\"ds-badge ds-badge-ok\">Leaders</span> <span class=\"ds-badge ds-badge-ok\">Can absorb</span><div class=\"ds-move\">Members to Leaders</div></td><td class=\"ds-num\">10</td></tr></tbody></table>",
+      "css": ".ds-row{width:100%;border-collapse:collapse;font:400 13px/1.4 -apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',Roboto,sans-serif}.ds-row td{border-bottom:1px solid var(--color-border,#e5e5e7);padding:10px 12px;vertical-align:top}.ds-row a{color:var(--color-ink,#1d1d1f);font-weight:500;text-decoration:none}.ds-row a:hover{text-decoration:underline}.ds-row td>div{font-size:12px;color:var(--color-ink-secondary,#6e6e73)}.ds-num{text-align:right;font-variant-numeric:tabular-nums;color:var(--color-ink,#1d1d1f)}.ds-move{margin-top:4px;color:var(--color-success,#1a7f4b)}.ds-badge{display:inline-flex;align-items:center;border-radius:9999px;padding:4px 10px;font:500 12px/1 -apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',Roboto,sans-serif}.ds-badge-ok{background:var(--color-success-tint,#eaf7f0);color:var(--color-success,#1a7f4b)}"
     },
     {
       "name": "Accent Badge",
@@ -119,70 +431,137 @@
       "css": ".ds-input { width: 100%; border-radius: 10px; border: 1px solid #D2D2D7; background: #ffffff; padding: 8px 12px; font-size: 15px; color: #1D1D1F; } .ds-input::placeholder { color: #A1A1A6; } .ds-input:focus-visible { outline: none; box-shadow: 0 0 0 2px #FF6F2F; }"
     },
     {
-      "name": "Keyboard Hint Chip",
-      "kind": "chip",
-      "refersTo": null,
-      "description": "Signature component — a single-character keycap attached inline to the triage action it triggers (1 / N / S).",
-      "html": "<kbd class=\"ds-kbd\">N</kbd>",
-      "css": ".ds-kbd { display: inline-flex; align-items: center; justify-content: center; min-width: 20px; height: 20px; margin-left: 8px; border-radius: 5px; border: 1px solid #D2D2D7; background: #F5F5F7; font-size: 11px; font-weight: 500; color: #A1A1A6; }"
-    },
-    {
-      "name": "Line Chart",
-      "kind": "custom",
-      "refersTo": null,
-      "description": "Trend chart (e.g. Returnees vs. First-timers per game night). 2px lines round-capped, hairline solid gridlines, always-on legend for 2+ series, direct end-labels only, hover crosshair + tooltip, table-view twin. Colors from Colors → Chart Series, never eyeballed.",
-      "html": "<div class=\"ds-chart\"><svg viewBox=\"0 0 200 100\" class=\"ds-chart-svg\"><line x1=\"10\" y1=\"80\" x2=\"190\" y2=\"80\" class=\"ds-chart-grid\" /><path d=\"M10,80 L100,40 L190,20\" class=\"ds-chart-line ds-chart-line--returnee\" /><circle cx=\"190\" cy=\"20\" r=\"4\" class=\"ds-chart-dot ds-chart-dot--returnee\" /></svg></div>",
-      "css": ".ds-chart-grid { stroke: #E5E5E7; stroke-width: 1; } .ds-chart-line { fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; } .ds-chart-line--returnee { stroke: #2A78D6; } .ds-chart-line--firsttimer { stroke: #FF6F2F; } .ds-chart-dot { stroke: #ffffff; stroke-width: 2; } .ds-chart-dot--returnee { fill: #2A78D6; }"
-    },
-    {
-      "name": "Bar Chart",
-      "kind": "custom",
-      "refersTo": null,
-      "description": "Ranked comparison chart (e.g. first-timers by sport). Bars rounded on top corners only (4px), square at the baseline — never rounded on all four. Single accent hue for a single-series comparison; hover tooltip per bar; table-view twin.",
-      "html": "<div class=\"ds-chart\"><svg viewBox=\"0 0 200 100\" class=\"ds-chart-svg\"><path d=\"M20,90 L20,54 Q20,50 24,50 L36,50 Q40,50 40,54 L40,90 Z\" class=\"ds-chart-bar\" /><line x1=\"10\" y1=\"90\" x2=\"190\" y2=\"90\" class=\"ds-chart-axis\" /></svg></div>",
-      "css": ".ds-chart-bar { fill: #FF6F2F; } .ds-chart-axis { stroke: #D2D2D7; stroke-width: 1; }"
-    },
-    {
       "name": "Navigation",
       "kind": "nav",
-      "refersTo": null,
-      "description": "The one sanctioned exception to the system's no-chrome discipline — a 56px top bar, added once a 4-page product had no way to move between pages. Shows the same three links (Upload, Players, Dashboard) on every page — access control is deferred, so a role-split nav would hide links without gating anything. Active link is weight+ink only, never a pill or underline.",
-      "html": "<header class=\"ds-nav\"><div class=\"ds-nav-inner\"><a href=\"/upload\" class=\"ds-nav-logo\"><img src=\"/b1g-sportship-mark.png\" alt=\"B1G Sportship\" /></a><nav class=\"ds-nav-links\"><a href=\"/upload\" class=\"ds-nav-link ds-nav-link--active\">Upload</a><a href=\"/players\" class=\"ds-nav-link\">Players</a><a href=\"/dashboard\" class=\"ds-nav-link\">Dashboard</a></nav></div></header>",
-      "css": ".ds-nav { background: #ffffff; border-bottom: 1px solid #E5E5E7; } .ds-nav-inner { max-width: 960px; margin: 0 auto; height: 56px; display: flex; align-items: center; justify-content: space-between; padding: 0 24px; } .ds-nav-logo img { height: 24px; width: auto; } .ds-nav-links { display: flex; align-items: center; gap: 20px; } .ds-nav-link { font-size: 13px; font-weight: 500; color: #6E6E73; transition: color 150ms ease-out; } .ds-nav-link:hover { color: #1D1D1F; } .ds-nav-link--active { font-weight: 600; color: #1D1D1F; }"
+      "refersTo": "graphite",
+      "description": "The one piece of persistent chrome: 56px bar, five destinations, 1280px measure so the content aligns with the page beneath. Icons pair with labels down to sm, then carry the bar alone. The B1G Sportship mark sits at the left on wider viewports and is omitted here because it is a raster asset that cannot be inlined.",
+      "html": "<header class=\"ds-nav\"><nav><a href=\"/upload\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M12 3v12M7 8l5-5 5 5\"/><path d=\"M3 15v4a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-4\"/></svg>Upload</a><a href=\"/players\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2\"/><circle cx=\"9\" cy=\"7\" r=\"4\"/><path d=\"M22 21v-2a4 4 0 0 0-3-3.87\"/></svg>Players</a><a href=\"/match\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M11 14 9.5 12.5a2.1 2.1 0 0 1 3-3l1.5 1.5\"/><path d=\"M12 5 9.5 7.5\"/><path d=\"M20.5 12.5a2.1 2.1 0 0 0-3-3\"/><path d=\"M3 12a9 9 0 0 1 9-9 9 9 0 0 1 9 9 9 9 0 0 1-9 9 9 9 0 0 1-9-9Z\"/></svg>Match</a><a href=\"/game-nights\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M8 2v4M16 2v4M3 10h18\"/><rect x=\"3\" y=\"4\" width=\"18\" height=\"18\" rx=\"2\"/></svg>Nights</a><a href=\"/dashboard\" class=\"on\" aria-current=\"page\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M3 3v18h18\"/><rect x=\"7\" y=\"12\" width=\"3\" height=\"6\"/><rect x=\"13\" y=\"8\" width=\"3\" height=\"10\"/></svg>Dashboard</a></nav></header>",
+      "css": ".ds-nav{background:#fff;border-bottom:1px solid var(--color-border,#e5e5e7);font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',Roboto,sans-serif}.ds-nav nav{display:flex;align-items:center;justify-content:flex-end;gap:20px;height:56px;max-width:1280px;margin:0 auto;padding:0 24px}.ds-nav a{display:inline-flex;align-items:center;gap:6px;font:500 13px/1.3 inherit;color:var(--color-ink-secondary,#6e6e73);text-decoration:none;border-radius:4px;transition:color .15s ease-out}.ds-nav a svg{width:16px;height:16px;flex:none}.ds-nav a:hover{color:var(--color-ink,#1d1d1f)}.ds-nav a.on{font-weight:600;color:var(--color-ink,#1d1d1f)}.ds-nav a:focus-visible{outline:none;box-shadow:0 0 0 2px var(--color-accent,#ff6f2f)}"
+    },
+    {
+      "name": "Panel Header with icon",
+      "kind": "custom",
+      "refersTo": "panel",
+      "description": "Named sections carry a 16px icon in secondary ink. Repeating panels never do — a person is not a category.",
+      "html": "<div class=\"ds-ph\"><h2><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\"><path d=\"M8 2v4M16 2v4M3 10h18\"/><rect x=\"3\" y=\"4\" width=\"18\" height=\"18\" rx=\"2\"/></svg>Participation history</h2><p>17 game nights, most recent first.</p></div>",
+      "css": ".ds-ph{border-bottom:1px solid var(--color-border,#e5e5e7);padding:16px 20px;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',Roboto,sans-serif}.ds-ph h2{margin:0;display:flex;align-items:center;gap:8px;font:600 15px/1.3 inherit;letter-spacing:-.01em;color:var(--color-ink,#1d1d1f)}.ds-ph h2 svg{width:16px;height:16px;flex:none;color:var(--color-ink-secondary,#6e6e73)}.ds-ph p{margin:4px 0 0;font:400 13px/1.5 inherit;color:var(--color-ink-secondary,#6e6e73)}"
+    },
+    {
+      "name": "Gender Mark",
+      "kind": "custom",
+      "refersTo": "graphite",
+      "description": "Mars/Venus at text scale, inheriting ink and never coloured. Only where the split is load-bearing.",
+      "html": "<span class=\"ds-gm\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\"><path d=\"M16 3h5v5M21 3l-6.75 6.75\"/><circle cx=\"10\" cy=\"14\" r=\"6\"/></svg>Male · 22 seeking</span>",
+      "css": ".ds-gm{display:inline-flex;align-items:center;gap:6px;font:500 12px/1.3 -apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',Roboto,sans-serif;color:var(--color-ink-secondary,#6e6e73)}.ds-gm svg{width:14px;height:14px;flex:none}"
+    },
+    {
+      "name": "Attendance Split Bar",
+      "kind": "custom",
+      "refersTo": "success",
+      "description": "Arrivals plus no-shows summing to registrations. Never registered-beside-came — attendance is a subset, and stacking those double-counts. Now rendered as the summary bar above each facet in the sport grids rather than as a standalone panel.",
+      "html": "<div class=\"ds-sb\"><span class=\"ds-sb-n\">Running</span><span class=\"ds-sb-t\"><span class=\"ds-sb-bar\" style=\"width:100%\"><span style=\"width:33%\"></span><span class=\"ds-sb-x\"></span></span></span><span class=\"ds-sb-v\">33% · 84 of 253</span></div>",
+      "css": ".ds-sb{display:flex;align-items:center;gap:12px;font:400 12px/1.4 -apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',Roboto,sans-serif}.ds-sb-n{width:80px;flex:none;color:var(--color-ink,#1d1d1f)}.ds-sb-t{flex:1;min-width:0}.ds-sb-bar{display:flex;height:12px;gap:1px;border-radius:3px;overflow:hidden}.ds-sb-bar>span:first-child{background:var(--color-success,#1a7f4b)}.ds-sb-x{flex:1;background:var(--color-accent-tint,#fff1e8)}.ds-sb-v{width:112px;flex:none;text-align:right;font-variant-numeric:tabular-nums;color:var(--color-ink-secondary,#6e6e73)}"
+    },
+    {
+      "name": "Evidence Signal",
+      "kind": "custom",
+      "refersTo": "success",
+      "description": "One line of evidence on a match or review card. Met reads in success ink; missing stays quiet. Values are shown, not just verdicts.",
+      "html": "<ul class=\"ds-sig\"><li class=\"on\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"3\" stroke-linecap=\"round\"><path d=\"M20 6 9 17l-5-5\"/></svg>Registered for this night</li><li><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\"><path d=\"M18 6 6 18M6 6l12 12\"/></svg>Location — leads Pasig</li></ul>",
+      "css": ".ds-sig{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:6px 20px;font:400 12px/1.4 -apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',Roboto,sans-serif}.ds-sig li{display:flex;align-items:baseline;gap:6px;color:var(--color-ink-secondary,#6e6e73)}.ds-sig li svg{width:12px;height:12px;flex:none;transform:translateY(2px);color:var(--color-ink-tertiary,#a1a1a6)}.ds-sig li.on{color:var(--color-ink,#1d1d1f)}.ds-sig li.on svg{color:var(--color-success,#1a7f4b)}"
+    },
+    {
+      "name": "View Switch",
+      "kind": "chip",
+      "refersTo": "view-switch",
+      "description": "The segmented control in a panel header. Two readings that share a table's columns are one component with a switch, never two panels — count/ratio on the sport grids, and the three roster views.",
+      "html": "<div class=\"ds-switch\" role=\"group\" aria-label=\"Roster view\"><button class=\"ds-switch-opt ds-switch-on\" aria-pressed=\"true\">Returning players</button><button class=\"ds-switch-opt\" aria-pressed=\"false\">No-shows</button><button class=\"ds-switch-opt\" aria-pressed=\"false\">Returning but unplaced</button></div>",
+      "css": ".ds-switch { display: inline-flex; flex-wrap: wrap; gap: 0; padding: 2px; border: 1px solid var(--color-border-strong); border-radius: 7px; background: var(--color-surface); } .ds-switch-opt { appearance: none; border: 0; background: transparent; padding: 4px 8px; border-radius: 5px; font: 500 12px/1 -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto, sans-serif; color: var(--color-ink-secondary); cursor: pointer; transition: background-color 0.15s, color 0.15s; } .ds-switch-opt:hover { color: var(--color-ink); } .ds-switch-opt:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 1px; } .ds-switch-on, .ds-switch-on:hover { background: var(--color-surface-subtle); color: var(--color-ink); }"
+    },
+    {
+      "name": "Butterfly Row",
+      "kind": "custom",
+      "refersTo": "seg-leaders",
+      "description": "One row of a mirrored comparison: leaders' offer left, seekers' want right, on a shared percentage axis. Both wings are a share of their own population — the populations differ better than two to one, so a shared count axis would read proportional agreement as a shortfall. The printed figure is the share, matching what the bar encodes.",
+      "html": "<div class=\"ds-bfly\"><span class=\"ds-bfly-pct\">12%</span><span class=\"ds-bfly-wing ds-bfly-left\"><span class=\"ds-bfly-bar ds-bfly-offer\" style=\"width:92%\"></span></span><span class=\"ds-bfly-label\">1pm</span><span class=\"ds-bfly-wing\"><span class=\"ds-bfly-bar ds-bfly-want\" style=\"width:46%\"></span></span><span class=\"ds-bfly-pct\">6%</span></div>",
+      "css": ".ds-bfly { display: flex; align-items: center; gap: 8px; font: 400 11px/1.3 -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto, sans-serif; color: var(--color-ink-secondary); } .ds-bfly-pct { width: 32px; flex: none; font-variant-numeric: tabular-nums; } .ds-bfly-pct:first-child { text-align: right; } .ds-bfly-wing { flex: 1 1 0; min-width: 0; display: flex; } .ds-bfly-left { justify-content: flex-end; } .ds-bfly-bar { display: block; height: 14px; } .ds-bfly-offer { background: var(--color-seg-leaders); border-radius: 3px 0 0 3px; } .ds-bfly-want { background: var(--color-seg-seekers); border-radius: 0 3px 3px 0; } .ds-bfly-label { width: 86px; flex: none; text-align: center; font-weight: 600; color: var(--color-ink); }"
+    },
+    {
+      "name": "Capacity Fill Bar",
+      "kind": "custom",
+      "refersTo": "success",
+      "description": "Seekers against leaders with room, one bar per gender. The whole bar is the supply, the filled part is the demand, and the unfilled remainder is the finding — capacity is not the constraint. Each bar is its own denominator because groups are not mixed, so the two markets never share a scale. Replaced a dumbbell (2026-08-14) that asked the reader to decode a distance.",
+      "html": "<div class=\"ds-cap\"><div class=\"ds-cap-head\"><span class=\"ds-cap-g\">Male</span><span class=\"ds-cap-n\"><b>22 of 79</b> leaders needed</span></div><div class=\"ds-cap-track\"><span class=\"ds-cap-need\" style=\"width:28%\"></span><span class=\"ds-cap-spare\"></span></div><div class=\"ds-cap-key\"><span><i class=\"ds-cap-sw ds-cap-sw-need\"></i><b>22</b> seeking</span><span><i class=\"ds-cap-sw ds-cap-sw-spare\"></i><b>57</b> leaders spare</span><span><b>22 of 22</b> matchable</span></div></div>",
+      "css": ".ds-cap { font: 400 12px/1.3 -apple-system, BlinkMacSystemFont, \"SF Pro Text\", \"Segoe UI\", Roboto, sans-serif; color: var(--color-ink-secondary); } .ds-cap-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; } .ds-cap-g { font-size: 13px; font-weight: 500; color: var(--color-ink); } .ds-cap-n b { color: var(--color-ink); font-weight: 600; font-variant-numeric: tabular-nums; } .ds-cap-track { display: flex; height: 12px; margin-top: 8px; border-radius: 9999px; overflow: hidden; background: var(--color-surface-subtle); } .ds-cap-need { display: block; height: 100%; background: var(--color-seg-seekers); } .ds-cap-spare { display: block; height: 100%; flex: 1; background: var(--color-success); } .ds-cap-key { display: flex; flex-wrap: wrap; gap: 4px 16px; margin-top: 6px; } .ds-cap-key b { color: var(--color-ink); font-weight: 500; font-variant-numeric: tabular-nums; } .ds-cap-sw { display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 6px; } .ds-cap-sw-need { background: var(--color-seg-seekers); } .ds-cap-sw-spare { background: var(--color-success); }"
     }
   ],
   "narrative": {
     "northStar": "The Control Surface",
-    "overview": "This is an operator's panel, not a showcase — a single admin, alone, weekly, dropping a file and trusting the system to place the obvious cases silently while surfacing only what genuinely needs a human call. Every device in the system serves that: a white canvas with almost no chrome, one accent color spent only where a decision or a status actually lives, generous whitespace that reads as calm rather than empty, and a triage step built to be operated — keyboard shortcuts, a forward-advancing transition, a queue that shrinks as you work it.\n\nThe system fuses three references named directly in the brief: Apple Health's native chrome, generous whitespace, and card-based data presentation; Linear's snappy, deliberate, keyboard-fast interaction texture; and Notion/Things 3's calm, content-first, single-item focus. Nothing here is warm or ministry-themed by design — this tool serves a church sports program, but its register is neutral efficient utility, deliberately separated from the program's own identity. It explicitly rejects the generic SaaS admin dashboard: no sidebar, no data-table-plus-chart-widgets scaffold, no navigation chrome standing between the admin and the task.",
+    "overview": "This is an operator's panel, not a showcase — a single admin, alone, weekly, dropping a file and trusting the system to place the obvious cases silently while surfacing only what genuinely needs a human call. Every device in the system serves that: a white canvas with almost no chrome, one accent color spent only where a decision or a status actually lives, generous whitespace that reads as calm rather than empty, and a triage step built to be operated — keyboard shortcuts, a forward-advancing transition, a queue that shrinks as you work it.\n\nThe system fuses three references named directly in the brief: Apple Health's native chrome, generous whitespace, and card-based data presentation; Linear's snappy, deliberate, keyboard-fast interaction texture; and Notion/Things 3's calm, content-first, single-item focus. Nothing here is warm or ministry-themed by design — this tool serves a church sports program, but its register is neutral efficient utility, deliberately separated from the program's own identity. It explicitly rejects the generic SaaS admin dashboard: no sidebar, no data-table-plus-chart-widgets scaffold, no decorative navigation chrome standing between the admin and the task. The one exception, added once a real multi-page product existed: a single thin top bar for wayfinding — see Layout and Components → Navigation.",
     "keyCharacteristics": [
       "White/clean ground as the overwhelming majority of every screen; color is earned, never ambient.",
-      "One accent (Ember, #FF6F2F) spent only on primary actions and states that need attention — never decorative, never small standalone text.",
+      "One accent (`Ember`, #FF6F2F) spent only on primary actions and states that need attention — never decorative, never small standalone text.",
       "Cards are the only container, always soft-shadowed, never bordered-and-shadowed at once.",
       "Motion is signature, not scattered: a shared entrance fade for arriving at a step, a distinct forward-slide reserved for advancing through the triage queue.",
-      "No kickers, no eyebrows, no uppercase tracked labels anywhere in the system.",
-      "Chart series are a separate, validated extension (blue + Ember) — CVD-checked, never eyeballed, never expanded past the documented palette order."
+      "No kickers, no eyebrows, no uppercase tracked labels anywhere in the system."
     ],
     "rules": [
-      { "name": "The Ember Contrast Rule", "body": "Ember (#FF6F2F) has a measured WCAG contrast of ~2.8:1 against both white and black at small sizes — it fails body-text contrast either way. Ember therefore only ever appears as a fill (paired with Graphite text on top, never white) or as Ember Ink (#C2450F) when the accent needs to be small text or an icon directly on canvas. Never render raw Ember as text.", "section": "colors" },
-      { "name": "The One-Voice Rule", "body": "Ember is the only saturated color with a decorative role in the system. Success and Danger are status signals, not palette options — do not reach for them to add visual variety.", "section": "colors" },
-      { "name": "The No-Eyebrow Rule", "body": "No label in the system is uppercase, letter-spaced, or set above a heading as a kicker. Section labels sit at Label size, sentence case, directly adjacent to the content they describe.", "section": "typography" },
-      { "name": "The One-Shadow Rule", "body": "There is exactly one shadow value. If a new component seems to need a different depth, that is a signal to reconsider the component, not to add a shadow tier.", "section": "elevation" }
+      {
+        "name": "The Ember Contrast Rule",
+        "body": "Ember (#FF6F2F) has a measured WCAG contrast of ~2.8:1 against both white and black at small sizes — it fails body-text contrast either way. Ember therefore only ever appears as a fill (paired with Graphite text on top, never white) or as `Ember Ink` (#C2450F, a darkened same-hue derivative that clears 5:1 on white) when the accent needs to be small text or an icon directly on canvas. Never render raw Ember as text.",
+        "section": "colors"
+      },
+      {
+        "name": "The One-Voice Rule",
+        "body": "Ember is the only saturated color with a decorative role in the system. Success and Danger are status signals, not palette options — do not reach for them to add visual variety.",
+        "section": "colors"
+      },
+      {
+        "name": "The No-Eyebrow Rule",
+        "body": "No label in the system is uppercase, letter-spaced, or set above a heading as a kicker. Section labels sit at Label size, sentence case, directly adjacent to the content they describe — never floating above it as a category tag.",
+        "section": "typography"
+      },
+      {
+        "name": "The One-Shadow Rule",
+        "body": "There is exactly one shadow value. If a new component seems to need a different depth, that is a signal to reconsider the component, not to add a shadow tier.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Panel Header Icon Rule",
+        "body": "A panel header may carry a 16px icon in `Graphite Secondary`, but **named sections only** — the panels a reader scans between. A panel that repeats does not: the 40+ seeker panels on `/match` are titled with people's names, and a person is not a category. Forty identical icons are texture, not wayfinding. Metric panels take no icon either; their 34px figure is the focal element and an icon beside it competes.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Borrowed Legend Rule",
+        "body": "A chart whose two sides are segments — leaders against seekers, in a group against not — takes the segment tokens verbatim rather than picking a fresh pair. The supply/demand butterflies wear seg-leaders on the offer wing and seg-seekers on the want wing, so a reader who learned the funnel reads them without a second legend.",
+        "section": "colors"
+      },
+      {
+        "name": "The Switch-In-Place Rule",
+        "body": "When two readings share a table's columns or a grid's axes and differ only in ranking, filter, or normalisation, they are one component with a switch — never two panels. Three panels printing the same table three times is the failure this rule exists to prevent; the roster's returning / no-show / unplaced views are the case that earned it.",
+        "section": "components"
+      }
     ],
     "dos": [
-      "Do spend Ember only on fills paired with Graphite text, or as Ember Ink for small text/icons directly on canvas — never raw Ember as text.",
-      "Do keep every card at the single Card shadow value and 16px radius, no exceptions.",
-      "Do set section/field labels in sentence case at Label size, adjacent to their content — never as an uppercase kicker above it.",
-      "Do use tabular figures only for aligned columns and compact inline counters — never on a large standalone stat value.",
+      "Do spend Ember only on fills paired with Graphite text, or as Ember Ink for small text/icons directly on canvas — never raw Ember as text (The Ember Contrast Rule).",
+      "Do keep every card at the single Card shadow value and 16px radius, no exceptions (The One-Shadow Rule).",
+      "Do set section/field labels in sentence case at Label size, adjacent to their content — never as an uppercase kicker above it (The No-Eyebrow Rule).",
+      "Do use tabular figures only for aligned columns and compact inline counters (queue position, future table columns) — never on a large standalone stat value.",
       "Do reserve Success/Danger strictly for status, never as palette variety.",
-      "Do validate any new chart series color with validate_palette.js before shipping it — never eyeball CVD-safety."
+      "Do validate any new chart series color with `validate_palette.js` before shipping it — never eyeball CVD-safety.",
+      "Do print the figure the mark actually encodes: a share bar gets a percentage beside it and its raw count in the row's title.",
+      "Do measure a chart's min-width floor at 390px before trusting its overflow-x-auto wrapper to contain it.",
+      "Do open a facetted grid with its Total facet, then run the categories alphabetically, so two grids of the same five things can be read against each other position by position."
     ],
     "donts": [
       "Don't introduce a sidebar, or any chrome beyond the one documented top bar — no secondary toolbars, breadcrumbs, or decorative header content.",
       "Don't add a second accent color. One accent, spent deliberately, is the system's discipline.",
+      "Don't invent a new chart series hue past the documented palette order — the next slot is aqua, not a generated color.",
       "Don't use white text on Ember; it fails contrast at this hue (~2.8:1) regardless of weight or size.",
       "Don't reach for progress bars, completion badges, or celebratory motion — this is a chore tool, not a gamified habit app.",
-      "Don't stack a border, a shadow, and a background-color shift on the same card edge.",
-      "Don't invent a new chart series hue past the documented palette order — the next slot is aqua, not a generated color."
+      "Don't stack a border, a shadow, and a background-color shift on the same card edge; borders and the one shadow work together, a background shift never joins them (surface and canvas share the same white).",
+      "Don't build a second panel for a reading that shares another's columns and differs only in ranking, filter, or normalisation — that is one component with a switch.",
+      "Don't give a chart a second colour pair for a distinction the segment palette already carries."
     ]
   }
 }

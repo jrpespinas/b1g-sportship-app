@@ -2,17 +2,33 @@
 
 import { parseRosterFile } from "@/lib/parse";
 import { matchRowsAgainstHistory } from "@/lib/match";
+import { matchAttendance, parseAttendanceFile, type AttendanceCandidate } from "@/lib/attendance";
+import { buildHistories, type PlayerHistory } from "@/lib/candidate-evidence";
 import {
   buildGameNight,
   buildParticipation,
   buildPlayer,
   commitBatchToSheets,
   findGameNightByDate,
+  listGameNights,
+  listParticipations,
   listPlayers,
   listPlayersWithRows,
+  listParticipationsWithRows,
+  findGameNightWithRow,
+  commitAttendanceToSheets,
   type PlayerWithRow,
+  type ParticipationWithRow,
 } from "@/lib/store";
-import type { GameNight, IncomingRow, MatchOutcome, Participation, Player, ReviewAction } from "@/lib/types";
+import type {
+  GameNight,
+  IncomingAttendanceRow,
+  IncomingRow,
+  MatchOutcome,
+  Participation,
+  Player,
+  ReviewAction,
+} from "@/lib/types";
 
 export interface ParseAndMatchResult {
   ok: true;
@@ -22,6 +38,13 @@ export interface ParseAndMatchResult {
   withinBatchDuplicatesCollapsed: number;
   autoConfirmed: Extract<MatchOutcome, { kind: "new" | "returning" }>[];
   ambiguous: Extract<MatchOutcome, { kind: "ambiguous" }>[];
+  /**
+   * Keyed by playerId, and only for players who appear on a review card.
+   * Carried alongside the outcomes rather than folded into them so the commit
+   * path keeps taking plain `Player`s — history is evidence for the reviewer,
+   * never something that gets written back.
+   */
+  histories: Record<string, PlayerHistory>;
 }
 
 export interface ParseAndMatchError {
@@ -53,6 +76,14 @@ export async function parseAndMatch(formData: FormData): Promise<ParseAndMatchRe
     (o): o is Extract<MatchOutcome, { kind: "ambiguous" }> => o.kind === "ambiguous",
   );
 
+  // Only the players a reviewer will actually look at. When nothing was
+  // flagged this reads neither sheet — the common case on a clean upload.
+  const candidateIds = new Set(ambiguous.flatMap((o) => o.candidates.map((c) => c.playerId)));
+  const histories =
+    candidateIds.size > 0
+      ? buildHistories(candidateIds, await listParticipations(), await listGameNights())
+      : {};
+
   return {
     ok: true,
     sourceFilename: file.name,
@@ -61,6 +92,7 @@ export async function parseAndMatch(formData: FormData): Promise<ParseAndMatchRe
     withinBatchDuplicatesCollapsed,
     autoConfirmed,
     ambiguous,
+    histories,
   };
 }
 
@@ -95,7 +127,9 @@ function newPlayerAndParticipation(row: IncomingRow, gameNightId: string): { pla
   const player = buildPlayer({
     firstName: row.firstName,
     lastName: row.lastName,
+    nickname: row.nickname,
     email: row.email,
+    mobileNumber: row.mobileNumber,
     gender: row.gender,
     civilStatus: row.civilStatus,
     dgroupMemberStatus: row.dgroupMemberStatus,
@@ -115,6 +149,7 @@ function newPlayerAndParticipation(row: IncomingRow, gameNightId: string): { pla
     skillLevel: row.skillLevel,
     isFirstParticipation: true,
     submittedAt: row.submittedAt,
+    registered: true,
     dgroupStatus: row.dgroupStatus,
     dgroupInterestedInJoining: row.dgroupInterestedInJoining,
     dgroupLeadingWillingToAbsorb: row.dgroupLeadingWillingToAbsorb,
@@ -134,6 +169,7 @@ function returningParticipation(row: IncomingRow, player: Player, gameNightId: s
     skillLevel: row.skillLevel,
     isFirstParticipation: false,
     submittedAt: row.submittedAt,
+    registered: true,
     dgroupStatus: row.dgroupStatus,
     dgroupInterestedInJoining: row.dgroupInterestedInJoining,
     dgroupLeadingWillingToAbsorb: row.dgroupLeadingWillingToAbsorb,
@@ -152,6 +188,13 @@ function returningParticipation(row: IncomingRow, player: Player, gameNightId: s
  * Identity (name, email) is deliberately never refreshed: those are what
  * dedup matched on, so letting a typo in a later export rewrite them would
  * silently split or merge real people.
+ *
+ * The caller (`recordReturning`) only invokes this when the incoming game
+ * night is chronologically the latest thing on record for this player — see
+ * `latestKnownDateByPlayerId` in `commitBatch`. Without that gate, uploading
+ * an older night after newer ones already landed would treat stale answers
+ * as "new information" and overwrite a status a later night had already
+ * corrected.
  */
 function refreshedPlayer(row: IncomingRow, player: Player): Player | null {
   // A blank answer on a later form means "no new information", never an
@@ -161,6 +204,11 @@ function refreshedPlayer(row: IncomingRow, player: Player): Player | null {
 
   const merged: Player = {
     ...player,
+    // Nickname and mobile refresh like any other answer. They are NOT
+    // identity in the dedup sense — matching keys on first/last/email only
+    // (lib/match.ts), so a changed nickname cannot split or merge a person.
+    nickname: keep(row.nickname, player.nickname),
+    mobileNumber: keep(row.mobileNumber, player.mobileNumber),
     gender: keep(row.gender, player.gender),
     civilStatus: keep(row.civilStatus, player.civilStatus),
     dgroupMemberStatus: keep(row.dgroupMemberStatus, player.dgroupMemberStatus),
@@ -171,6 +219,8 @@ function refreshedPlayer(row: IncomingRow, player: Player): Player | null {
   };
 
   const changed =
+    merged.nickname !== player.nickname ||
+    merged.mobileNumber !== player.mobileNumber ||
     merged.gender !== player.gender ||
     merged.civilStatus !== player.civilStatus ||
     merged.dgroupMemberStatus !== player.dgroupMemberStatus ||
@@ -201,9 +251,29 @@ export async function commitBatch(input: CommitBatchInput): Promise<CommitBatchR
 
   // Read players fresh (with their sheet rows) rather than trusting the
   // copies that round-tripped through the client during review.
-  const playersByIdWithRow = new Map<string, PlayerWithRow>(
-    (await listPlayersWithRows()).map((p) => [p.player.playerId, p]),
-  );
+  const [playersWithRows, existingParticipations, existingGameNights] = await Promise.all([
+    listPlayersWithRows(),
+    listParticipations(),
+    listGameNights(),
+  ]);
+  const playersByIdWithRow = new Map<string, PlayerWithRow>(playersWithRows.map((p) => [p.player.playerId, p]));
+
+  // The Player row's DGroup fields are a "latest known status" snapshot, and
+  // uploads don't always arrive in chronological order — a backfill can
+  // upload an older night after newer ones already landed (e.g. a
+  // rediscovered export for a night that was missed the first time). Without
+  // this, that older upload would read as "new information" and stomp a
+  // status that a later night had already correctly updated. Each player's
+  // Participation rows are the source of truth for "what's the most recent
+  // game night we've actually recorded for them" regardless of upload order.
+  const gameNightDateById = new Map(existingGameNights.map((gn) => [gn.gameNightId, gn.gameNightDate]));
+  const latestKnownDateByPlayerId = new Map<string, string>();
+  for (const p of existingParticipations) {
+    const date = gameNightDateById.get(p.gameNightId);
+    if (!date) continue;
+    const current = latestKnownDateByPlayerId.get(p.playerId);
+    if (!current || date > current) latestKnownDateByPlayerId.set(p.playerId, date);
+  }
 
   const gameNight = buildGameNight({
     gameNightDate: input.gameNightDate,
@@ -230,7 +300,16 @@ export async function commitBatch(input: CommitBatchInput): Promise<CommitBatchR
   function recordReturning(row: IncomingRow, playerId: string) {
     const known = refreshes.get(playerId) ?? playersByIdWithRow.get(playerId);
     if (!known) return;
+
+    // The Participation row is always written — it's this night's own record
+    // and is safe regardless of upload order. Only the Player snapshot
+    // refresh is chronology-gated.
     participations.push(returningParticipation(row, known.player, gameNight.gameNightId));
+
+    const latestKnownDate = latestKnownDateByPlayerId.get(playerId);
+    const isChronologicallyCurrent = !latestKnownDate || input.gameNightDate >= latestKnownDate;
+    if (!isChronologicallyCurrent) return;
+
     const updated = refreshedPlayer(row, known.player);
     if (updated) refreshes.set(playerId, { player: updated, sheetRow: known.sheetRow });
   }
@@ -285,5 +364,168 @@ export async function commitBatch(input: CommitBatchInput): Promise<CommitBatchR
     newPlayerCount: newPlayers.length,
     returningPlayerCount,
     refreshedPlayerCount: refreshedPlayers.length,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Attendance — the door check-in list
+// ---------------------------------------------------------------------------
+
+export interface ParseAttendanceResult {
+  ok: true;
+  sourceFilename: string;
+  rowCount: number;
+  duplicateCount: number;
+  unusableRowCount: number;
+  matched: { row: IncomingAttendanceRow; player: Player }[];
+  ambiguous: { row: IncomingAttendanceRow; candidates: AttendanceCandidate[] }[];
+}
+
+export interface ParseAttendanceError {
+  ok: false;
+  reason: "missing-columns" | "empty-file";
+  missingColumns?: string[];
+}
+
+export async function parseAndMatchAttendance(
+  formData: FormData,
+): Promise<ParseAttendanceResult | ParseAttendanceError> {
+  const file = formData.get("file") as File | null;
+  if (!file || file.size === 0) return { ok: false, reason: "empty-file" };
+
+  const parsed = await parseAttendanceFile(await file.arrayBuffer());
+  if (!parsed.ok) return { ok: false, reason: "missing-columns", missingColumns: parsed.missingColumns };
+
+  const players = await listPlayers();
+
+  // The night's roster is the strongest evidence a bare name can be matched
+  // against, so it is fetched before ranking rather than after.
+  const gameNightDate = String(formData.get("gameNightDate") ?? "");
+  const night = gameNightDate ? await findGameNightWithRow(gameNightDate) : undefined;
+  const registeredPlayerIds = new Set<string>();
+  const sportByPlayerId = new Map<string, string>();
+  if (night) {
+    for (const { participation } of await listParticipationsWithRows()) {
+      if (participation.gameNightId !== night.gameNight.gameNightId) continue;
+      registeredPlayerIds.add(participation.playerId);
+      sportByPlayerId.set(participation.playerId, participation.sportSelected);
+    }
+  }
+
+  const outcomes = matchAttendance(parsed.rows, players, { registeredPlayerIds, sportByPlayerId });
+
+  return {
+    ok: true,
+    sourceFilename: file.name,
+    rowCount: parsed.rows.length,
+    duplicateCount: parsed.duplicateCount,
+    unusableRowCount: parsed.unusableRowCount,
+    matched: outcomes.filter((o) => o.kind === "matched").map((o) => ({ row: o.row, player: o.player })),
+    ambiguous: outcomes
+      .filter((o) => o.kind === "ambiguous")
+      .map((o) => ({ row: o.row, candidates: o.candidates })),
+  };
+}
+
+export interface CommitAttendanceInput {
+  gameNightDate: string;
+  sourceFilename: string;
+  rowCount: number;
+  /** Auto-matched plus anything the admin linked in review. */
+  present: { row: IncomingAttendanceRow; playerId: string }[];
+  allowReupload?: boolean;
+}
+
+export type CommitAttendanceResult =
+  | {
+      ok: true;
+      gameNight: GameNight;
+      registered: number;
+      attended: number;
+      noShows: number;
+      walkIns: number;
+    }
+  | { ok: false; reason: "no-game-night"; gameNightDate: string }
+  | { ok: false; reason: "already-uploaded"; existing: GameNight };
+
+/** Lets the form warn before any review work that the night is missing or done. */
+export async function checkAttendanceNight(
+  gameNightDate: string,
+): Promise<{ found: false } | { found: true; gameNight: GameNight; alreadyUploaded: boolean }> {
+  const hit = await findGameNightWithRow(gameNightDate);
+  if (!hit) return { found: false };
+  return { found: true, gameNight: hit.gameNight, alreadyUploaded: !!hit.gameNight.attendanceUploadedAt };
+}
+
+/**
+ * Marks who actually came. Attendance never creates a game night — it attaches
+ * to one that registration already established, because without that night's
+ * registrations there is nobody to match a bare name against.
+ */
+export async function commitAttendance(input: CommitAttendanceInput): Promise<CommitAttendanceResult> {
+  const hit = await findGameNightWithRow(input.gameNightDate);
+  if (!hit) return { ok: false, reason: "no-game-night", gameNightDate: input.gameNightDate };
+  if (hit.gameNight.attendanceUploadedAt && !input.allowReupload) {
+    return { ok: false, reason: "already-uploaded", existing: hit.gameNight };
+  }
+
+  const all = await listParticipationsWithRows();
+  const thisNight = all.filter((p) => p.participation.gameNightId === hit.gameNight.gameNightId);
+  const byPlayerId = new Map(thisNight.map((p) => [p.participation.playerId, p]));
+
+  const updated: ParticipationWithRow[] = [];
+  const walkIns: Participation[] = [];
+
+  for (const { row, playerId } of input.present) {
+    const existing = byPlayerId.get(playerId);
+    if (existing) {
+      updated.push({
+        sheetRow: existing.sheetRow,
+        participation: {
+          ...existing.participation,
+          attendedAt: row.checkedInAt,
+          attendedSport: row.sport,
+        },
+      });
+      continue;
+    }
+    // Checked in without registering. The sport comes from the door list
+    // because there is no registration to take one from.
+    walkIns.push(
+      buildParticipation({
+        playerId,
+        gameNightId: hit.gameNight.gameNightId,
+        sportSelected: row.sport ?? "Unspecified",
+        isFirstParticipation: false,
+        submittedAt: "",
+        registered: false,
+        attendedAt: row.checkedInAt,
+        attendedSport: row.sport,
+      }),
+    );
+  }
+
+  const attended = updated.length + walkIns.length;
+  const gameNight: GameNight = {
+    ...hit.gameNight,
+    attendanceUploadedAt: new Date().toISOString(),
+    attendanceSourceFilename: input.sourceFilename,
+    attendanceCount: attended,
+  };
+
+  await commitAttendanceToSheets({
+    gameNight,
+    gameNightSheetRow: hit.sheetRow,
+    updated,
+    walkIns,
+  });
+
+  return {
+    ok: true,
+    gameNight,
+    registered: thisNight.length,
+    attended,
+    noShows: thisNight.length - updated.length,
+    walkIns: walkIns.length,
   };
 }

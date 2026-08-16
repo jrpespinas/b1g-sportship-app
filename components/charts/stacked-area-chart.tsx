@@ -22,6 +22,16 @@ interface StackedAreaChartProps {
   compact?: boolean;
   /** For small multiples, where one legend serves the whole grid. */
   hideLegend?: boolean;
+  /**
+   * Renders the table instead of the plot, driven from outside.
+   *
+   * A compact chart hides its own "View as table" button, which left the
+   * small multiples with no table at all — and the design system requires
+   * one, because a tooltip must never be the only way to read a value. The
+   * grids now switch every facet at once from the panel header, so one
+   * control serves six charts instead of six buttons serving one each.
+   */
+  asTable?: boolean;
   emptyLabel?: string;
 }
 
@@ -50,11 +60,14 @@ export function StackedAreaChart({
   height = 220,
   compact = false,
   hideLegend = false,
+  asTable,
   emptyLabel,
 }: StackedAreaChartProps) {
   const titleId = useId();
   const [hoverIndex, setHoverIndex] = useState<number | null>(null);
   const [showTable, setShowTable] = useState(false);
+  // Own button when the chart is full size, panel switch when it is not.
+  const tableVisible = asTable ?? showTable;
 
   const n = categories.length;
   const plotWidth = WIDTH - PAD_LEFT - PAD_RIGHT;
@@ -169,7 +182,7 @@ export function StackedAreaChart({
         </div>
       )}
 
-      {showTable ? (
+      {tableVisible ? (
         <div className="mt-3 overflow-x-auto">
           <table className="w-full text-left text-[12px]">
             <thead>
@@ -279,12 +292,13 @@ export function StackedAreaChart({
                   height={plotHeight}
                   fill="transparent"
                   onMouseEnter={() => setHoverIndex(i)}
-                  onFocus={() => setHoverIndex(i)}
-                  tabIndex={0}
-                  role="button"
-                  aria-label={`${categoryLabels[i]}: ${bands
-                    .map((b) => `${b.label} ${b.values[i] ?? 0}`)
-                    .join(", ")}, total ${totals[i]}`}
+                  // Pointer affordance only. These used to be focusable
+                  // buttons, which put 192 unlabelled-focus stops between a
+                  // keyboard user and the page's primary action, and none of
+                  // them carried a focus ring. The values live in the table
+                  // twin, which is the accessible path the design system
+                  // already required.
+                  aria-hidden="true"
                 />
               ))}
             </svg>

@@ -1,7 +1,18 @@
 # Backfill: rebuilding the estate with point-in-time status
 
-> **Status: procedure ready, not yet run.** Written 2026-08-11. Run it when
-> you have the 17 exports to hand and roughly an hour.
+> **Status: run and verified, 2026-08-11.** All 17 exports were re-uploaded
+> through `/upload`. Results against the pre-reset baseline:
+>
+> | | Before | After |
+> |---|---|---|
+> | Game nights | 17 | **17** — Feb 28 → Aug 1, correctly dated, no duplicates |
+> | Players | 1081 | **1080** (−1, within the expected fuzzy-match variance) |
+> | Participations | 2801 | **2801** — exact match |
+>
+> **Do not run the reset script again on the strength of this document.** The
+> procedure below is kept as a record of what was done and as a template if a
+> second correction ever becomes necessary. It is destructive, and the estate
+> it would clear is now correct.
 
 ## Why this exists
 
@@ -37,6 +48,7 @@ re-upload can undo that.
 |---|---|
 | Point-in-time status persisted per attendance | `lib/types.ts`, `lib/store.ts` (`PARTICIPATION_HEADERS` + mappers) |
 | Returning players' records refreshed in place | `app/upload/actions.ts` (`refreshedPlayer`) |
+| The refresh is chronology-gated, not upload-order-gated | `app/upload/actions.ts` (`latestKnownDateByPlayerId` in `commitBatch`) |
 | Batched row update, one API call not one per player | `lib/sheets.ts` (`updateRows`) |
 | Duplicate game-night guard | `app/upload/actions.ts` (`commitBatch`), `components/upload/upload-flow.tsx` |
 | Honest fallback when a night has no stored status | `lib/dgroup.ts` (`resolveParticipationSegment`) |
@@ -45,6 +57,18 @@ Identity fields — first name, last name, email — are deliberately **never**
 refreshed. Those are what dedup matches on; letting a typo in a later export
 rewrite them would silently split or merge real people. A blank answer on a
 later form is treated as "no new information", never as an erasure.
+
+**Why "chronology-gated, not upload-order-gated" matters for this exact
+procedure.** If a night gets uploaded out of order — discovered late, or
+redone after a mistake — a naive "last upload wins" refresh would treat that
+older night's answers as new information and overwrite a status a
+later-dated night had already corrected. `commitBatch` instead computes each
+player's latest *game night date* already on record (from their
+`Participations` rows, not from upload order) and only refreshes the Player
+snapshot when the incoming night is that date or later. The Participation row
+itself is always written regardless — only the "current status" snapshot is
+gated. Found and fixed 2026-08-11, mid-backfill, when a missed night (Apr 25)
+needed uploading last, after 16 later nights were already in.
 
 ## Why a full reset rather than re-uploading one night at a time
 
@@ -105,9 +129,42 @@ Expected afterwards:
   fuzzy-match decisions are judgement calls and may land differently on a
   replay. A large gap (say under 1000 or over 1150) means something went
   wrong; restore from the backup and stop.
-- Participations: close to 2801, every row carrying `dgroup_status`.
-- The dashboard's orange "segment history is inferred" banner **disappears**,
-  because all 17 nights now carry their own answers.
+- Participations: close to 2801, each row carrying whatever `dgroup_status`
+  that person actually gave that night — **which is not all of them.** See
+  below.
+
+### What "full coverage" actually looks like — corrected 2026-08-12
+
+An earlier draft of this section expected *every* row to carry a
+`dgroup_status`, and expected the dashboard's orange banner to disappear on
+that basis. Both were wrong, and the mistake is worth recording because it
+produced a real bug.
+
+Measured after the backfill, point-in-time coverage runs from **85% on Feb 28
+down to 26% on Aug 1**, and no night reaches 100%. Split by first-timer versus
+returnee, the cause is plain: first-timers sit at 60–85%, returnees at 16–36%.
+
+That is not a parsing failure. `lib/column-map.ts` resolves every field by
+header text, not column position, so drift between files cannot do this. The
+real reason is the form itself: someone who says it is not their first time
+registering can skip the discipleship questions and keep the answers they gave
+before. Most returnees do exactly that. **A blank here means "no change
+reported", not "data lost"** — and the dashboard already handles it correctly
+by falling back to that person's latest known status
+(`resolveParticipationSegment`).
+
+So there are two different situations, and only one is a defect:
+
+1. **A capture gap** — the app dropped an answer it was given. This is what
+   the backfill fixed, and what the dashboard still warns about.
+2. **A skipped question** — the person chose not to re-answer. Normal,
+   permanent, and expected on every future upload too.
+
+The dashboard's banner originally fired on both, which meant it could never
+switch off and its explanation named the wrong cause. It now fires only on
+nights with attendees and *zero* captured answers (`getCaptureGaps`) — a real
+pipeline failure, since first-timers are always asked and cannot skip.
+Verified silent as of 2026-08-12.
 
 ## What you get
 

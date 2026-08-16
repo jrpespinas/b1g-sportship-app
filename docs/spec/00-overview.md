@@ -10,8 +10,11 @@ for a change scoped to one area.
 |---|---|
 | [01-data-model.md](01-data-model.md) | The Google Sheet as system of record: `Players`, `Game Nights`, and `Participations` tabs, full field list, types, dedup keys. |
 | [02-player-inventory.md](02-player-inventory.md) | Admin surface: weekly Excel upload, history matching, review queue, browse/search. |
-| [03-dashboard.md](03-dashboard.md) | Pastor/volunteer surface: metrics, breakdowns, refresh strategy. |
+| [03-dashboard.md](03-dashboard.md) | Pastor/volunteer surface: metrics, breakdowns, refresh strategy. Attendance metrics added 2026-08-13. |
 | [04-access-control.md](04-access-control.md) | The two shared-credential gates and what they guard. |
+| [05-backfill.md](05-backfill.md) | The 2026-08-11 re-upload that fixed point-in-time discipleship status. Run and verified; kept as a record. |
+| [06-attendance.md](06-attendance.md) | The door check-in list: why registering and attending are different events, and how a bare name is matched without an email. |
+| [07-game-nights.md](07-game-nights.md) | The season ledger and per-night record: which nights have which files, and what happened on each. |
 
 See `/PRODUCT.md` at the repo root for product-level truth (users, positioning,
 principles) that this spec set implements. This overview and the files it indexes

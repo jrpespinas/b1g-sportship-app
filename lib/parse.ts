@@ -91,6 +91,8 @@ export async function parseRosterFile(buffer: ArrayBuffer): Promise<ParseResult>
       rowIndex: rowNumber,
       firstName: firstName.trim(),
       lastName: lastName.trim(),
+      nickname: cellText(row, col("nickname")) || undefined,
+      mobileNumber: cellText(row, col("mobileNumber")) || undefined,
       email: email.trim(),
       gender: cellText(row, col("gender")) || undefined,
       civilStatus: cellText(row, col("civilStatus")) || undefined,
