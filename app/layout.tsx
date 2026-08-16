@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
 import { TopNav } from "@/components/nav/top-nav";
+import { SESSION_COOKIE, readSessionToken } from "@/lib/auth";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -7,7 +9,11 @@ export const metadata: Metadata = {
   description: "Discipleship and attendance for B1G Sportship game nights.",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default async function RootLayout({ children }: LayoutProps<"/">) {
+  // The nav needs the role to decide whether Upload is reachable. Read here
+  // rather than in the nav itself, which is a client component.
+  const role = readSessionToken((await cookies()).get(SESSION_COOKIE)?.value);
+
   return (
     <html lang="en" className="h-full antialiased">
       <body className="min-h-full flex flex-col bg-canvas text-ink">
@@ -61,7 +67,7 @@ never gated anything once the page behind it had no lock either.
         >
           Skip to content
         </a>
-        <TopNav />
+        <TopNav role={role} />
         <main id="main" tabIndex={-1} className="flex-1 outline-none">
           {children}
         </main>

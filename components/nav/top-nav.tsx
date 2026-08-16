@@ -3,15 +3,26 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { CalendarDays, ChartColumn, HeartHandshake, Upload, Users, type LucideIcon } from "lucide-react";
+import {
+  CalendarDays,
+  ChartColumn,
+  HeartHandshake,
+  LogOut,
+  Upload,
+  Users,
+  type LucideIcon,
+} from "lucide-react";
 import { clsx } from "@/lib/clsx";
+import type { Role } from "@/lib/auth";
+import { signOut } from "@/app/login/actions";
 
-// Shows every destination on every page. Access control is deferred (no
-// credential check exists anywhere yet — docs/spec/04-access-control.md),
-// so a role-split nav would draw a boundary that doesn't actually exist:
-// hiding links doesn't gate anything when the routes themselves are open to
-// anyone with the URL. Revisit this list, not the concept, once real access
-// control ships and a role-aware split is worth something again.
+// Shows every destination the current session can actually reach.
+//
+// This list was flat for a reason that expired: while every route was open to
+// anyone with the URL, hiding a link gated nothing and only made the nav lie
+// about the app's shape. Access control shipped 2026-08-17
+// (docs/spec/04-access-control.md), so the split now marks a real boundary —
+// Upload is the one destination a viewer session genuinely cannot open.
 //
 // Icons pair with labels down to `sm`. Below that a fifth destination made
 // them stop fitting — four pairs already need ~322px of the 342px a 390px
@@ -30,8 +41,22 @@ const LINKS: { href: string; label: string; icon: LucideIcon }[] = [
   { href: "/dashboard", label: "Dashboard", icon: ChartColumn },
 ];
 
-export function TopNav() {
+export function TopNav({ role }: { role: Role | null }) {
   const pathname = usePathname();
+
+  // The gate has its own screen and no destinations to offer. Rendering the
+  // bar there would show five links that all bounce straight back to it.
+  if (pathname === "/login") return null;
+
+  /*
+   * Upload is hidden from a viewer session.
+   *
+   * DESIGN.md justified showing every link everywhere because "hiding a link
+   * doesn't gate anything when the page behind it has no lock." A lock exists
+   * now, so that reasoning expired: the link would be a promise the proxy
+   * immediately breaks.
+   */
+  const links = role === "admin" ? LINKS : LINKS.filter((link) => link.href !== "/upload");
 
   return (
     <header className="border-b border-border bg-surface">
@@ -69,7 +94,7 @@ export function TopNav() {
         </Link>
 
         <nav className="flex items-center gap-1 sm:gap-5">
-          {LINKS.map((link) => {
+          {links.map((link) => {
             const active =
               pathname === link.href || (link.href !== "/dashboard" && pathname.startsWith(link.href));
             const Icon = link.icon;
@@ -95,6 +120,23 @@ export function TopNav() {
               </Link>
             );
           })}
+
+          {/* Sessions last thirty days, so leaving one has to be possible —
+              particularly on a shared or borrowed device. */}
+          {role ? (
+            <form action={signOut}>
+              <button
+                type="submit"
+                className="inline-flex items-center gap-1.5 rounded-[4px] px-2 py-1.5 text-[13px] font-medium text-ink-secondary outline-none transition-colors hover:text-ink focus-visible:ring-2 focus-visible:ring-accent pointer-coarse:min-h-11 sm:px-0"
+              >
+                <LogOut className="size-4 shrink-0" strokeWidth={2} aria-hidden />
+                <span className="max-sm:hidden">Sign out</span>
+                <span className="sr-only">
+                  Sign out of the {role === "admin" ? "admin" : "viewer"} session
+                </span>
+              </button>
+            </form>
+          ) : null}
         </nav>
       </div>
     </header>
