@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-08-15T06:18:13.922Z",
+  "generatedAt": "2026-08-16T16:29:21.318Z",
   "title": "Design System: B1G Sportship — Player Inventory",
   "extensions": {
     "colorMeta": {
@@ -140,33 +140,29 @@
         ]
       },
       "seg-seekers": {
-        "role": "chart",
-        "displayName": "Seekers Burnt Orange",
-        "canonical": "#c2410c",
+        "role": "primary",
+        "displayName": "Ember — Seekers",
+        "canonical": "#ff6f2f",
         "tonalRamp": [
-          "oklch(15% 0.174 38.4)",
-          "oklch(27% 0.174 38.4)",
-          "oklch(39% 0.174 38.4)",
-          "oklch(51% 0.174 38.4)",
-          "oklch(63% 0.174 38.4)",
-          "oklch(75% 0.174 38.4)",
-          "oklch(87% 0.174 38.4)",
-          "oklch(95% 0.174 38.4)"
+          "#ffe6db",
+          "#ffbda0",
+          "#ff976d",
+          "#ff6f2f",
+          "#c14600",
+          "#892d00"
         ]
       },
       "seg-uninvolved": {
-        "role": "chart",
-        "displayName": "Not-involved Peach",
-        "canonical": "#f7c4a3",
+        "role": "primary",
+        "displayName": "Ember Light — Not involved",
+        "canonical": "#ffbda0",
         "tonalRamp": [
-          "oklch(15% 0.073 54.4)",
-          "oklch(27% 0.073 54.4)",
-          "oklch(39% 0.073 54.4)",
-          "oklch(51% 0.073 54.4)",
-          "oklch(63% 0.073 54.4)",
-          "oklch(75% 0.073 54.4)",
-          "oklch(87% 0.073 54.4)",
-          "oklch(95% 0.073 54.4)"
+          "#ffe6db",
+          "#ffbda0",
+          "#ff976d",
+          "#ff6f2f",
+          "#c14600",
+          "#892d00"
         ]
       },
       "page": {
@@ -263,24 +259,22 @@
         ]
       },
       "series-noshow": {
-        "role": "tertiary",
-        "displayName": "No-Show Clay",
-        "canonical": "#d98b5f",
+        "role": "primary",
+        "displayName": "Ember Mid — Did not attend",
+        "canonical": "#ff976d",
         "tonalRamp": [
-          "oklch(15% 0.112 49.6)",
-          "oklch(27% 0.112 49.6)",
-          "oklch(39% 0.112 49.6)",
-          "oklch(51% 0.112 49.6)",
-          "oklch(63% 0.112 49.6)",
-          "oklch(75% 0.112 49.6)",
-          "oklch(87% 0.112 49.6)",
-          "oklch(95% 0.112 49.6)"
+          "#ffe6db",
+          "#ffbda0",
+          "#ff976d",
+          "#ff6f2f",
+          "#c14600",
+          "#892d00"
         ]
       },
       "seg-unrecorded": {
         "role": "neutral",
         "displayName": "Unrecorded Grey",
-        "canonical": "#b4b4bb",
+        "canonical": "#929296",
         "tonalRamp": [
           "oklch(15% 0.005 286)",
           "oklch(27% 0.005 286)",
@@ -290,6 +284,84 @@
           "oklch(75% 0.005 286)",
           "oklch(87% 0.005 286)",
           "oklch(95% 0.005 286)"
+        ]
+      },
+      "ember-1": {
+        "role": "neutral",
+        "displayName": "Ember 1",
+        "canonical": "#ffe6db",
+        "tonalRamp": [
+          "#ffe6db",
+          "#ffbda0",
+          "#ff976d",
+          "#ff6f2f",
+          "#c14600",
+          "#892d00"
+        ]
+      },
+      "ember-2": {
+        "role": "neutral",
+        "displayName": "Ember 2",
+        "canonical": "#ffbda0",
+        "tonalRamp": [
+          "#ffe6db",
+          "#ffbda0",
+          "#ff976d",
+          "#ff6f2f",
+          "#c14600",
+          "#892d00"
+        ]
+      },
+      "ember-3": {
+        "role": "neutral",
+        "displayName": "Ember 3",
+        "canonical": "#ff976d",
+        "tonalRamp": [
+          "#ffe6db",
+          "#ffbda0",
+          "#ff976d",
+          "#ff6f2f",
+          "#c14600",
+          "#892d00"
+        ]
+      },
+      "ember-4": {
+        "role": "primary",
+        "displayName": "Ember 4",
+        "canonical": "#ff6f2f",
+        "tonalRamp": [
+          "#ffe6db",
+          "#ffbda0",
+          "#ff976d",
+          "#ff6f2f",
+          "#c14600",
+          "#892d00"
+        ]
+      },
+      "ember-5": {
+        "role": "primary",
+        "displayName": "Ember 5",
+        "canonical": "#c14600",
+        "tonalRamp": [
+          "#ffe6db",
+          "#ffbda0",
+          "#ff976d",
+          "#ff6f2f",
+          "#c14600",
+          "#892d00"
+        ]
+      },
+      "ember-6": {
+        "role": "primary",
+        "displayName": "Ember 6",
+        "canonical": "#892d00",
+        "tonalRamp": [
+          "#ffe6db",
+          "#ffbda0",
+          "#ff976d",
+          "#ff6f2f",
+          "#c14600",
+          "#892d00"
         ]
       }
     },
@@ -394,8 +466,8 @@
       "name": "Discipleship Segment Bands",
       "kind": "custom",
       "refersTo": "seg-leaders",
-      "description": "The five-segment stack: blue = placed, warm = unplaced, grey = never asked. Always rendered in pipeline order, never sorted by size — the order is the meaning. The grey band is deliberately colourless: a hue would place it on a journey that has not started.",
-      "html": "<div class=\"ds-seg\"><span style=\"background:#082c57\"></span><span style=\"background:#256abf\"></span><span style=\"background:#c2410c\"></span><span style=\"background:#f7c4a3\"></span><span style=\"background:#b4b4bb\"></span></div>",
+      "description": "The five-segment stack: blue = placed, ember = unplaced, grey = never asked. Rendered in pipeline order, never sorted by size. Every warm band is a step of the brand ramp (OKLCH hue 41.8), so the palette is rooted in the brand with blue as its complement.",
+      "html": "<div class=\"ds-seg\"><span style=\"background:#082c57\"></span><span style=\"background:#256abf\"></span><span style=\"background:#ff6f2f\"></span><span style=\"background:#ffbda0\"></span><span style=\"background:#929296\"></span></div>",
       "css": ".ds-seg{display:flex;gap:1px;height:12px;width:100%;border-radius:9999px;overflow:hidden}.ds-seg span{flex:1}"
     },
     {
@@ -533,7 +605,7 @@
       },
       {
         "name": "The Borrowed Legend Rule",
-        "body": "A chart whose two sides are segments — leaders against seekers, in a group against not — takes the segment tokens verbatim rather than picking a fresh pair. The supply/demand butterflies wear seg-leaders on the offer wing and seg-seekers on the want wing, so a reader who learned the funnel reads them without a second legend.",
+        "body": "A chart whose two sides are segments — leaders against seekers, in a group against not — takes the segment tokens verbatim rather than picking a fresh pair. The supply/demand butterflies wear seg-leaders on the offer wing and seg-seekers — the brand itself — on the want wing, so a reader who learned the funnel reads them without a second legend.",
         "section": "colors"
       },
       {

@@ -224,6 +224,16 @@ to lead, is named in the subtitle and kept out of the offer wing, because
 `buildMatchBoard` scores against the 184 only and the two surfaces must not
 disagree about who can take someone.
 
+**Cached reads are gzipped, and that is not an optimisation — it is what
+makes them cacheable at all.** Next's data cache rejects any entry over 2MB,
+and the Players tab is 3.5MB as header-keyed objects. The first version cached
+the expanded rows and failed silently: `unstable_cache` still returns the
+value when the write is rejected, so the page looked cached while re-fetching
+underneath, and the only symptom was an `unhandledRejection` in the server
+log. Storing the Sheets API's own shape (headers once, then a values matrix)
+and gzipping it gives **3.54MB → 0.27MB**, costing 7ms to expand against a
+~900ms round-trip, verified lossless.
+
 **The Sheets reads are cached; do not reintroduce "reads live off the Sheet
 on every request".** Measured 2026-08-16: three parallel tab reads cost
 904–1450ms and were essentially the entire server render — the aggregation

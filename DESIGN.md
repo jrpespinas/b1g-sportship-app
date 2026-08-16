@@ -22,7 +22,13 @@ colors:
   series-returnee: "#2a78d6"
   series-firsttimer: "#ff6f2f"
   series-neutral: "#134c8f"
-  series-noshow: "#d98b5f"
+  series-noshow: "#ff976d"
+  ember-1: "#ffe6db"
+  ember-2: "#ffbda0"
+  ember-3: "#ff976d"
+  ember-4: "#ff6f2f"
+  ember-5: "#c14600"
+  ember-6: "#892d00"
   blue-1: "#d9eaff"
   blue-2: "#aacdfb"
   blue-3: "#73a7ec"
@@ -31,8 +37,9 @@ colors:
   blue-6: "#082c57"
   seg-leaders: "#082c57"
   seg-members: "#256abf"
-  seg-seekers: "#c2410c"
-  seg-uninvolved: "#f7c4a3"
+  seg-seekers: "#ff6f2f"
+  seg-uninvolved: "#ffbda0"
+  seg-unrecorded: "#929296"
   page: "#f4f5f7"
   chart-grid: "#e5e5e7"
   chart-axis: "#d2d2d7"
@@ -508,9 +515,9 @@ anyone reads a legend.
 |---|---|---|---|
 | Leaders | `--color-seg-leaders` | `#082c57` | dark navy |
 | Members | `--color-seg-members` | `#256abf` | blue |
-| Seekers | `--color-seg-seekers` | `#c2410c` | burnt orange |
-| Not involved | `--color-seg-uninvolved` | `#f7c4a3` | light peach |
-| Not recorded | `--color-seg-unrecorded` | `#b4b4bb` | neutral grey |
+| Seekers | `--color-seg-seekers` | `#ff6f2f` | **the brand, ember 4** |
+| Not involved | `--color-seg-uninvolved` | `#ffbda0` | ember 2 |
+| Not recorded | `--color-seg-unrecorded` | `#929296` | neutral grey |
 
 **The fifth band is deliberately colourless.** Added 2026-08-14, when the
 classification stopped folding never-asked people into "not involved". A hue
@@ -519,15 +526,20 @@ the journey has not started — nobody has asked. Grey says that; a light step
 of either ramp would not. It is the same neutral the funnel's hatch already
 used for the same population, now available to the stacked bands too.
 
-Measured on white — OKLab ΔE ×100, Viénot dichromat simulation for
-deuteranopia and protanopia: **worst adjacent normal-vision pair 24.0** (floor
-15), **worst adjacent CVD pair 21.1** (floor 8), **ΔE 15.7 from Ember**.
+Re-measured 2026-08-17 with the `dataviz` validator over the five bands in
+pipeline order — the pairs that actually touch in a stack: **worst adjacent CVD
+pair 15.2** (deuteranopia, floor 8), **worst adjacent normal-vision pair 17.7**
+(floor 15). The grey was darkened from `#b4b4bb` in the same pass: against the
+"not involved" band beside it, it measured **11.7**, below the 15 hard gate that
+no amount of labelling excuses.
 
 Three rules this set encodes, each of which a previous version got wrong:
 
-- **Seekers is burnt orange, never Ember.** Ember already means "first-timers"
-  in the trend chart on the same page. One colour with two meanings on one
-  screen is worse than a slightly less vivid band.
+- **Seekers is the brand itself** (reworked 2026-08-17). The previous rule read
+  "never Ember", because Ember meant "first-timers" in a trend chart on the
+  same page; that chart was cut and the reservation expired with it. The people
+  waiting to be placed are the page's action, and action is what orange denotes
+  here — so the most actionable band wears the brand colour.
 - **All four are opaque.** An earlier `uninvolved` value carried an alpha
   channel (`#eb875c8e`); in a stacked area chart a translucent band composites
   over the band behind it, so the rendered colour is never the token colour.
