@@ -15,13 +15,34 @@ function getClient(): sheets_v4.Sheets {
   if (client) return client;
 
   const email = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
-  const key = process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY;
-  if (!email || !key || !SHEET_ID) {
+  const rawKey = process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY;
+  if (!email || !rawKey || !SHEET_ID) {
+    const missing = [
+      !email && "GOOGLE_SERVICE_ACCOUNT_EMAIL",
+      !rawKey && "GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY",
+      !SHEET_ID && "GOOGLE_SHEET_ID",
+    ].filter(Boolean);
+    // Names the variables that are actually missing, and does not claim the
+    // fix is a local file: on a host these live in the project's environment
+    // settings, and "set them in .env.local" sent people looking in a file
+    // that is gitignored and therefore never deployed.
     throw new Error(
-      "Missing Google Sheets credentials — GOOGLE_SERVICE_ACCOUNT_EMAIL, " +
-        "GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY, and GOOGLE_SHEET_ID must be set in .env.local.",
+      `Missing Google Sheets credentials: ${missing.join(", ")}. Set them in .env.local for ` +
+        "local work, or in the hosting environment's variables for a deployment.",
     );
   }
+
+  /**
+   * A PEM has real newlines. Environment variables frequently do not.
+   *
+   * `.env.local` expands `\n` inside a quoted value, so the key arrives
+   * correctly locally; pasting the same JSON-escaped string into a hosting
+   * dashboard usually does not, and the failure is an opaque OpenSSL decoder
+   * error rather than anything naming the key. Normalising here costs nothing
+   * when the value already contains real newlines and removes the single most
+   * common way this deployment breaks.
+   */
+  const key = rawKey.includes("\\n") ? rawKey.replace(/\\n/g, "\n") : rawKey;
 
   const auth = new google.auth.JWT({
     email,
