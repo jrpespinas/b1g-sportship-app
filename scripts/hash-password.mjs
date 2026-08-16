@@ -52,5 +52,5 @@ const salt = randomBytes(16).toString("hex");
 const key = scryptSync(passphrase.normalize("NFKC"), salt, SCRYPT.keylen, SCRYPT);
 
 console.log("\nPaste this as the environment variable value:\n");
-console.log(`scrypt$${salt}$${key.toString("hex")}\n`);
+console.log(`scrypt:${salt}:${key.toString("hex")}\n`);
 console.log("Keep the passphrase in a password manager — it cannot be recovered from this hash.\n");
