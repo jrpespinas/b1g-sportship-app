@@ -259,6 +259,36 @@ export async function findGameNightWithRow(
  * existing rows are updated in place, walk-ins are appended, and the game
  * night's own row records that a file arrived at all.
  */
+/**
+ * Points a night at the sheet its door check-ins land in.
+ *
+ * Deliberately separate from importing. A link attached on Tuesday for a night
+ * that happens on Friday has nothing to import yet, and forcing the two into
+ * one action is what made attaching a live sheet impossible: the import
+ * refuses an empty sheet — correctly, since a night recorded with zero
+ * arrivals reads forever as "everybody stayed home" — so there was no way to
+ * say "remember this link, I will import it later".
+ *
+ * Writes only the URL. `attendance_uploaded_at` stays empty, so every
+ * show-up calculation still treats the night as one with no check-in list,
+ * which is exactly what it is until the night has happened.
+ */
+export async function setAttendanceSheetUrl(
+  gameNightId: string,
+  url: string,
+): Promise<GameNight | undefined> {
+  const rows = await readTab(GAME_NIGHTS_TAB);
+  const hit = rows.find((r) => r.row.game_night_id === gameNightId);
+  if (!hit) return undefined;
+
+  const gameNight: GameNight = { ...rowToGameNight(hit.row), attendanceSheetUrl: url || undefined };
+  await updateRows(GAME_NIGHTS_TAB, GAME_NIGHT_HEADERS, [
+    { sheetRow: hit.sheetRow, row: gameNightToRow(gameNight) },
+  ]);
+  revalidateSheets();
+  return gameNight;
+}
+
 export async function commitAttendanceToSheets(input: {
   gameNight: GameNight;
   gameNightSheetRow: number;

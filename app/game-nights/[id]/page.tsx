@@ -5,6 +5,9 @@ import { MetricPanel } from "@/components/dashboard/panel";
 import { getNightDetail } from "@/lib/game-nights";
 import { formatName } from "@/lib/player-name";
 import { NightRoster } from "@/components/game-nights/night-roster";
+import { DoorSheet } from "@/components/game-nights/door-sheet";
+import { cookies } from "next/headers";
+import { SESSION_COOKIE, readSessionToken } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
@@ -32,6 +35,7 @@ function BackLink() {
 export default async function GameNightDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const night = await getNightDetail(id);
+  const role = readSessionToken((await cookies()).get(SESSION_COOKIE)?.value);
 
   if (!night) {
     return (
@@ -136,6 +140,13 @@ export default async function GameNightDetailPage({ params }: { params: Promise<
               ))}
             </ul>
           </Panel>
+
+          <DoorSheet
+            gameNightId={night.gameNight.gameNightId}
+            gameNightDate={night.gameNight.gameNightDate}
+            initialUrl={night.gameNight.attendanceSheetUrl}
+            canEdit={role === "admin"}
+          />
 
           {/* Projected to four columns before it crosses to the client:
               `Player.raw` is the whole 80-column form response, and a night

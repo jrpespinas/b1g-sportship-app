@@ -95,6 +95,31 @@ re-reading a sheet someone has since corrected replaces rows rather than
 adding a second copy. It must never happen by accident, so it takes an
 explicit click.
 
+### Attaching is not importing — added 2026-08-17
+
+Three moments, deliberately separate: **attach** the link on the night's own
+page, **watch** it fill during the night, **import** once the night is over.
+
+Collapsing them is what made a live sheet impossible to set up. The only way
+to attach a link was to import it, the import refuses an empty sheet, and a
+sheet attached before the doors open is always empty — so there was no way to
+say "remember this link, I will import it later".
+
+`/game-nights/[id]` carries the panel. Attaching is admin-only (it writes);
+reading the count is viewer-level, because watching the door fill is not a
+write. Saving validates immediately, so an unshared or wrong-shaped sheet
+fails on the day you paste it rather than at 7pm on the night you need it.
+
+**A link writes only `attendance_sheet_url`.** `attendance_uploaded_at` stays
+empty, so a night with a link and no import is still, correctly, a night with
+no check-in list — it stays out of every show-up calculation. Verified with a
+real link attached to a live night: the dashboard continued to read *16 of 19
+nights* and a 62% season rate, untouched.
+
+Refresh is a button that states the time it read, never a timer. A stale
+number must not be able to pass itself off as live, and polling would spend
+the per-minute read quota all evening for a page nobody is looking at.
+
 ### An empty import is refused
 
 A sheet read before the doors open has no rows, and committing it would set
