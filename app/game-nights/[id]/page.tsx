@@ -132,7 +132,7 @@ export default async function GameNightDetailPage({ params }: { params: Promise<
             and four sortable columns, so it takes the full measure rather
             than the 320px rail it inherited when the door panel was slotted
             into this grid. */}
-        <div className="mt-3 grid grid-cols-1 gap-3 lg:grid-cols-[320px_1fr]">
+        <div className="mt-3 grid grid-cols-1 items-start gap-3 lg:grid-cols-[320px_1fr]">
           <Panel>
             <PanelHeader icon={CalendarDays} title="Sports" />
             <ul className="p-5">
@@ -153,6 +153,7 @@ export default async function GameNightDetailPage({ params }: { params: Promise<
           />
         </div>
 
+        <div className="mt-3">
           {/* Projected to four columns before it crosses to the client:
               `Player.raw` is the whole 80-column form response, and a night
               holds up to 180 of them. */}
@@ -169,6 +170,7 @@ export default async function GameNightDetailPage({ params }: { params: Promise<
               firstTime: participation.isFirstParticipation,
             }))}
           />
+        </div>
       </div>
     </div>
   );

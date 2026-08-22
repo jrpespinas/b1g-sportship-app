@@ -47,7 +47,11 @@ export function DoorSheet({
   }
 
   return (
-    <Panel className="mt-3">
+    // No outer margin. Spacing between panels belongs to whatever lays them
+    // out — carrying `mt-3` here put this panel 12px below the one beside it
+    // in the same grid row, because the grid's own gap was already doing the
+    // job.
+    <Panel>
       <PanelHeader
         icon={Link2}
         title="Door check-in sheet"
