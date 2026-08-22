@@ -36,6 +36,66 @@ const SPORT_BY_EMOJI: Record<string, string> = {
   "🏃": "Running",
 };
 
+/**
+ * An Excel/Sheets serial date to `YYYY-MM-DDTHH:MM:SS`, by arithmetic only.
+ *
+ * The serial is days since 1899-12-30; the fraction is the time of day. Both
+ * are converted without ever constructing a local `Date`, because the hour in
+ * a check-in sheet is the hour written at the door. Parsing it as an instant
+ * and re-rendering it in another zone turns a 17:30 arrival into 01:30 the
+ * following morning — the same rule that governs the DGroup time fields.
+ */
+export function serialToLocalIso(serial: number): string {
+  const days = Math.floor(serial);
+  const seconds = Math.round((serial - days) * 86400);
+  const hh = String(Math.floor(seconds / 3600)).padStart(2, "0");
+  const mm = String(Math.floor((seconds % 3600) / 60)).padStart(2, "0");
+  const ss = String(seconds % 60).padStart(2, "0");
+
+  // UTC accessors on a UTC-built epoch: arithmetic on a calendar, not a clock.
+  const at = new Date(Date.UTC(1899, 11, 30) + days * 86_400_000);
+  const y = at.getUTCFullYear();
+  const mo = String(at.getUTCMonth() + 1).padStart(2, "0");
+  const d = String(at.getUTCDate()).padStart(2, "0");
+  return `${y}-${mo}-${d}T${hh}:${mm}:${ss}`;
+}
+
+/**
+ * Whatever a Timestamp cell holds, as `YYYY-MM-DDTHH:MM:SS`.
+ *
+ * Three shapes reach this. A serial number, from a Sheets tab read with
+ * formatting off. An ISO string, from an uploaded `.xlsx` via ExcelJS. And a
+ * locale-formatted string like `8/22/2026 17:30:54`, if the column was ever
+ * typed as text rather than as a date — handled because it is cheap to, and
+ * because the failure it causes is silent: every row filtered out and a night
+ * that reads as nobody coming.
+ */
+export function normalizeCheckInTimestamp(raw: unknown): string {
+  if (typeof raw === "number" && Number.isFinite(raw)) return serialToLocalIso(raw);
+
+  const text = String(raw ?? "").trim();
+  if (!text) return "";
+  if (/^\d{4}-\d{2}-\d{2}/.test(text)) return text;
+
+  const us = text.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})[,\s]+(\d{1,2}):(\d{2})(?::(\d{2}))?\s*(AM|PM)?$/i);
+  if (us) {
+    const [, a, b, year, hourRaw, min, sec = "00", meridiem] = us;
+    // Month-first unless the first number cannot be a month.
+    const first = Number(a);
+    const month = first > 12 ? Number(b) : first;
+    const day = first > 12 ? first : Number(b);
+    let hour = Number(hourRaw);
+    if (meridiem) {
+      const pm = meridiem.toUpperCase() === "PM";
+      hour = pm ? (hour % 12) + 12 : hour % 12;
+    }
+    const pad = (n: number) => String(n).padStart(2, "0");
+    return `${year}-${pad(month)}-${pad(day)}T${pad(hour)}:${min}:${sec}`;
+  }
+
+  return text;
+}
+
 export interface AttendanceParseResult {
   ok: boolean;
   missingColumns?: string[];
@@ -147,7 +207,7 @@ export async function parseAttendanceFile(buffer: ArrayBuffer): Promise<Attendan
  *
  * `values[0]` is the header row, exactly as the Sheets API returns it.
  */
-export function parseAttendanceValues(values: string[][]): AttendanceParseResult {
+export function parseAttendanceValues(values: (string | number | boolean | null)[][]): AttendanceParseResult {
   const headers = (values[0] ?? []).map((h) => String(h ?? "").trim());
   const nameCol = headers.indexOf(ATTENDANCE_HEADER);
   if (nameCol === -1) {
@@ -159,7 +219,7 @@ export function parseAttendanceValues(values: string[][]): AttendanceParseResult
     values.slice(1).map((line, i) => ({
       rowIndex: i + 2, // +2: 1-indexed, plus the header row
       raw: String(line[nameCol] ?? "").trim(),
-      checkedInAt: timeCol === -1 ? "" : String(line[timeCol] ?? "").trim(),
+      checkedInAt: timeCol === -1 ? "" : normalizeCheckInTimestamp(line[timeCol]),
     })),
   );
 }

@@ -170,8 +170,11 @@ export function revalidateSheets(): void {
  * URL points at nothing — are indistinguishable in the raw Google error and
  * completely different to fix.
  */
+/** A cell as the API returns it once formatting is off: text, or a number. */
+export type SheetValue = string | number | boolean | null;
+
 export type ExternalSheetResult =
-  | { ok: true; title: string; values: string[][] }
+  | { ok: true; title: string; values: SheetValue[][] }
   | { ok: false; reason: "not-shared" | "not-found" | "no-such-tab" | "unknown"; detail?: string };
 
 export async function readExternalSheet(
@@ -199,8 +202,17 @@ export async function readExternalSheet(
     const res = await sheets.spreadsheets.values.get({
       spreadsheetId,
       range: `${title}!A1:ZZ`,
+      // Serial numbers, not display strings. A Form's Timestamp column comes
+      // back as "8/22/2026 17:30:54" by default — a locale-formatted string
+      // that is ambiguous (5/6 could be May or June) and does not match the
+      // ISO shape the rest of the app compares against. The serial is a plain
+      // number of days since 1899-12-30: unambiguous, and convertible without
+      // ever constructing a local Date, which is what keeps a 17:30 check-in
+      // from becoming 01:30 the next day.
+      valueRenderOption: "UNFORMATTED_VALUE",
+      dateTimeRenderOption: "SERIAL_NUMBER",
     });
-    return { ok: true, title, values: (res.data.values ?? []) as string[][] };
+    return { ok: true, title, values: (res.data.values ?? []) as SheetValue[][] };
   } catch (error) {
     return { ok: false, ...classify(error) };
   }

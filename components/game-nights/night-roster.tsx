@@ -60,10 +60,16 @@ function compare(a: NightRosterRow, b: NightRosterRow, key: SortKey): number {
 export function NightRoster({
   rows,
   hasAttendance,
+  live,
 }: {
   rows: NightRosterRow[];
   /** False until a check-in list exists — the column means nothing without one. */
   hasAttendance: boolean;
+  /**
+   * Set while a night is reading its door sheet and has not been imported.
+   * These arrivals are provisional: matched by name only, nothing written.
+   */
+  live?: { count: number; unresolved: number; total: number };
 }) {
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState<StatusFilter>("all");
@@ -121,7 +127,9 @@ export function NightRoster({
         subtitle={
           hasAttendance
             ? "Everyone who registered, plus anyone who walked in."
-            : "Everyone who registered. Attendance fills in once a check-in list is imported."
+            : live
+              ? `Checking in live from the door sheet — ${live.count} of ${live.total} matched by name so far. Nothing is recorded until the night is imported.`
+              : "Everyone who registered. Attendance fills in once a check-in list is imported."
         }
       />
 
@@ -142,7 +150,7 @@ export function NightRoster({
           />
         </label>
 
-        {hasAttendance && (
+        {(hasAttendance || live) && (
           <div className="flex rounded-[7px] border border-border-strong p-0.5" role="group" aria-label="Attendance">
             {statuses.map((option) => (
               <button
@@ -241,6 +249,11 @@ export function NightRoster({
                       <span className="tabular-nums text-ink">{row.arrivedAt}</span>
                     ) : hasAttendance ? (
                       <span className="text-ink-secondary">did not attend</span>
+                    ) : live ? (
+                      // "Not yet" while the door is still open. Saying "did not
+                      // attend" at 5pm would call a no-show on someone who is
+                      // parking the car.
+                      <span className="text-ink-secondary">not yet</span>
                     ) : (
                       <span className="text-ink-tertiary">—</span>
                     )}

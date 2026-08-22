@@ -159,13 +159,20 @@ export default async function GameNightDetailPage({ params }: { params: Promise<
               holds up to 180 of them. */}
           <NightRoster
             hasAttendance={hasAttendance}
+            live={
+              night.live
+                ? { count: night.live.byPlayer.size, unresolved: night.live.unresolved, total: night.live.total }
+                : undefined
+            }
             rows={night.roster.map(({ player, participation }) => ({
               playerId: player.playerId,
               name: formatName(player),
               sport: participation.attendedSport ?? participation.sportSelected,
               // The hour as written at the door. Never timezone-converted —
               // read as UTC a 5:33pm arrival becomes 1:33am the next day.
-              arrivedAt: participation.attendedAt ? participation.attendedAt.slice(11, 16) : undefined,
+              // Committed arrival if the night has been imported; otherwise
+              // whatever the linked sheet shows right now.
+              arrivedAt: (participation.attendedAt ?? night.live?.byPlayer.get(player.playerId))?.slice(11, 16),
               registered: participation.registered,
               firstTime: participation.isFirstParticipation,
             }))}

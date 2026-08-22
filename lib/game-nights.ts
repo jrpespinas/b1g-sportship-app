@@ -7,6 +7,8 @@
 // missing, so a caller cannot accidentally render an absence as a zero.
 
 import { listGameNights, listParticipations, listPlayers } from "./store";
+import { readAttendanceLink } from "./attendance-link";
+import { matchAttendance } from "./attendance";
 import type { GameNight, Participation, Player } from "./types";
 
 export interface NightSummary {
@@ -119,10 +121,29 @@ export interface ArrivalBucket {
   count: number;
 }
 
+/**
+ * Arrivals read from the night's linked sheet, before anything is committed.
+ *
+ * A preview, not a record: only unambiguous name matches are used, and none of
+ * it is written until the night is imported. Nothing here touches
+ * `attendance_uploaded_at`, so every show-up calculation still treats the
+ * night as one with no check-in list — which, until it is imported, it is.
+ */
+export interface LiveArrivals {
+  /** playerId → the check-in time, as written at the door. */
+  byPlayer: Map<string, string>;
+  /** Check-ins whose name matched nobody registered, or matched two people. */
+  unresolved: number;
+  total: number;
+  tabTitle: string;
+}
+
 export interface NightDetail extends NightSummary {
   /** Empty until a check-in file exists. */
   arrivals: ArrivalBucket[];
   roster: { player: Player; participation: Participation }[];
+  /** Present only while a night has a linked sheet and has not been imported. */
+  live?: LiveArrivals;
 }
 
 const formatHour = (hour: number) => {
@@ -156,8 +177,19 @@ export async function getNightDetail(gameNightId: string): Promise<NightDetail |
     byHour.set(n, (byHour.get(n) ?? 0) + 1);
   }
 
+  // A night that points at a sheet but has not been imported shows what the
+  // door has recorded so far. Read on render rather than held in client state,
+  // so the whole table — sorting by arrival, filtering to who came — works on
+  // live data without a second code path. Only un-imported nights with a link
+  // pay for the read, which in practice means tonight and nothing else.
+  let live: LiveArrivals | undefined;
+  if (gameNight.attendanceSheetUrl && !gameNight.attendanceUploadedAt) {
+    live = await readLiveArrivals(gameNight, rows, players);
+  }
+
   return {
     ...summary,
+    live,
     arrivals: [...byHour.entries()]
       .sort((a, b) => a[0] - b[0])
       .map(([hour, count]) => ({ hour, label: formatHour(hour), count })),
@@ -175,4 +207,35 @@ export async function getNightDetail(gameNightId: string): Promise<NightDetail |
         );
       }),
   };
+}
+
+/**
+ * Matches the door sheet's bare names against the people registered for the
+ * night, using only the unambiguous ones.
+ *
+ * A wrong link marks the wrong person present, and there is no email in a
+ * check-in list to catch it — so a name that matches two people, or nobody, is
+ * counted as unresolved and shown as a number rather than guessed at. Those
+ * are exactly the rows the import's review queue exists to settle.
+ */
+async function readLiveArrivals(
+  gameNight: GameNight,
+  rows: Participation[],
+  players: Player[],
+): Promise<LiveArrivals | undefined> {
+  const read = await readAttendanceLink(gameNight.attendanceSheetUrl!, gameNight.gameNightDate);
+  if (!read.ok) return undefined;
+
+  const registeredPlayerIds = new Set(rows.map((r) => r.playerId));
+  const sportByPlayerId = new Map(rows.map((r) => [r.playerId, r.sportSelected]));
+  const outcomes = matchAttendance(read.parsed.rows, players, { registeredPlayerIds, sportByPlayerId });
+
+  const byPlayer = new Map<string, string>();
+  let unresolved = 0;
+  for (const outcome of outcomes) {
+    if (outcome.kind === "matched") byPlayer.set(outcome.player.playerId, outcome.row.checkedInAt);
+    else unresolved += 1;
+  }
+
+  return { byPlayer, unresolved, total: read.parsed.rows.length, tabTitle: read.tabTitle };
 }

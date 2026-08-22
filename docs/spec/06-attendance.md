@@ -120,6 +120,52 @@ Refresh is a button that states the time it read, never a timer. A stale
 number must not be able to pass itself off as live, and polling would spend
 the per-minute read quota all evening for a page nobody is looking at.
 
+### The two doors disagreed about time, and it read as zero
+
+Fixed 2026-08-17, found live during a game night. The uploaded `.xlsx` goes
+through ExcelJS, which yields real dates that stringify to ISO. The Sheets API
+returns a *display* string for the same column — `8/22/2026 17:30:54` — so the
+date filter compared `"8/22/2026 "` against `"2026-08-22"`, discarded every
+row, and reported **0 check-ins while 40 people were standing in the gym**.
+
+Two changes. The tab is now read with `valueRenderOption: UNFORMATTED_VALUE`
+and `dateTimeRenderOption: SERIAL_NUMBER`, so a timestamp arrives as a number
+of days since 1899-12-30 rather than a locale-formatted string — unambiguous,
+where `5/6/2026` is not. And `normalizeCheckInTimestamp` converts anything a
+Timestamp cell can hold — serial, ISO, or `M/D/YYYY` text with or without
+AM/PM — into one canonical `YYYY-MM-DDTHH:MM:SS`.
+
+The serial is converted **by arithmetic, never by constructing a local Date**.
+The fraction is the time of day and the integer is the calendar day; parsing it
+as an instant and re-rendering it turns a 17:30 arrival into 01:30 the next
+morning, which is the rule this file has carried since the first check-in file.
+
+**The failure mode is why this matters more than it looks.** A wrong timestamp
+does not throw. It silently produces an empty night, which is indistinguishable
+from a night nobody came to.
+
+### The roster fills in live
+
+While a night has a linked sheet and has not been imported, the roster's
+**Checked in** column shows arrivals read from that sheet, and the attendance
+filters work on them. A player who has not arrived reads **"not yet"**, never
+"did not attend" — calling a no-show at 5pm on someone who is parking the car
+is a different claim entirely.
+
+**Only unambiguous name matches are used.** A name matching two people, or
+nobody, is counted as unresolved and reported as a number rather than guessed
+at — a wrong link marks the wrong person present, and a check-in list has no
+email to catch it. Those rows are what the import's review queue settles.
+
+Read on the server each render rather than held in client state, so sorting by
+arrival and filtering to who came work on live data with no second code path.
+Only un-imported nights with a link pay for the read.
+
+**None of it is written.** `attendance_uploaded_at` stays empty, so the night
+is still one with no check-in list and stays out of every show-up figure.
+Verified mid-night with 49 live arrivals on screen: the dashboard continued to
+read *16 of 19 nights* and 62% for the season.
+
 ### An empty import is refused
 
 A sheet read before the doors open has no rows, and committing it would set

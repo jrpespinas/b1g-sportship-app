@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { AlertTriangle, Link2, RefreshCw } from "lucide-react";
 import { Panel, PanelHeader } from "@/components/ui/panel";
 import { Button } from "@/components/ui/button";
@@ -35,15 +36,25 @@ export function DoorSheet({
   const [url, setUrl] = useState(initialUrl ?? "");
   const [status, setStatus] = useState<SheetStatus | null>(null);
   const [pending, startTransition] = useTransition();
+  const router = useRouter();
 
   const attached = (initialUrl ?? "").trim().length > 0;
 
   function save() {
-    startTransition(async () => setStatus(await attachSheet(gameNightId, gameNightDate, url)));
+    startTransition(async () => {
+      setStatus(await attachSheet(gameNightId, gameNightDate, url));
+      router.refresh();
+    });
   }
 
   function refresh() {
-    startTransition(async () => setStatus(await readSheetNow(gameNightDate, url.trim())));
+    startTransition(async () => {
+      setStatus(await readSheetNow(gameNightDate, url.trim()));
+      // The roster below reads the same sheet on the server, so refreshing the
+      // count without refreshing the page would leave the table showing an
+      // older door than the number above it.
+      router.refresh();
+    });
   }
 
   return (
