@@ -5,7 +5,13 @@ import { SESSION_COOKIE, readSessionToken } from "@/lib/auth";
 
 import { parseRosterFile } from "@/lib/parse";
 import { matchRowsAgainstHistory } from "@/lib/match";
-import { matchAttendance, parseAttendanceFile, type AttendanceCandidate } from "@/lib/attendance";
+import {
+  matchAttendance,
+  parseAttendanceFile,
+  type AttendanceCandidate,
+  type AttendanceParseResult,
+} from "@/lib/attendance";
+import { readAttendanceLink } from "@/lib/attendance-link";
 import { buildHistories, type PlayerHistory } from "@/lib/candidate-evidence";
 import {
   buildGameNight,
@@ -420,17 +426,33 @@ export async function parseAndMatchAttendance(
   const parsed = await parseAttendanceFile(await file.arrayBuffer());
   if (!parsed.ok) return { ok: false, reason: "missing-columns", missingColumns: parsed.missingColumns };
 
+  const gameNightDate = String(formData.get("gameNightDate") ?? "");
+  const night = gameNightDate ? await findGameNightWithRow(gameNightDate) : undefined;
+  return matchParsedAttendance(parsed, night?.gameNight, file.name);
+}
+
+/**
+ * Ranking a parsed check-in list against the roster.
+ *
+ * Shared by both doors — the uploaded file and the linked sheet — because the
+ * rules about what makes a name a match must not exist twice. The file path
+ * and the link path may differ in where cells come from; they may not differ
+ * in who they decide was present.
+ */
+async function matchParsedAttendance(
+  parsed: AttendanceParseResult,
+  gameNight: GameNight | undefined,
+  source: string,
+): Promise<ParseAttendanceResult> {
   const players = await listPlayers();
 
   // The night's roster is the strongest evidence a bare name can be matched
   // against, so it is fetched before ranking rather than after.
-  const gameNightDate = String(formData.get("gameNightDate") ?? "");
-  const night = gameNightDate ? await findGameNightWithRow(gameNightDate) : undefined;
   const registeredPlayerIds = new Set<string>();
   const sportByPlayerId = new Map<string, string>();
-  if (night) {
+  if (gameNight) {
     for (const { participation } of await listParticipationsWithRows()) {
-      if (participation.gameNightId !== night.gameNight.gameNightId) continue;
+      if (participation.gameNightId !== gameNight.gameNightId) continue;
       registeredPlayerIds.add(participation.playerId);
       sportByPlayerId.set(participation.playerId, participation.sportSelected);
     }
@@ -440,7 +462,7 @@ export async function parseAndMatchAttendance(
 
   return {
     ok: true,
-    sourceFilename: file.name,
+    sourceFilename: source,
     rowCount: parsed.rows.length,
     duplicateCount: parsed.duplicateCount,
     unusableRowCount: parsed.unusableRowCount,
@@ -458,6 +480,8 @@ export interface CommitAttendanceInput {
   /** Auto-matched plus anything the admin linked in review. */
   present: { row: IncomingAttendanceRow; playerId: string }[];
   allowReupload?: boolean;
+  /** Set when the night came through the link door, so it remembers where. */
+  sheetUrl?: string;
 }
 
 export type CommitAttendanceResult =
@@ -470,9 +494,39 @@ export type CommitAttendanceResult =
       walkIns: number;
     }
   | { ok: false; reason: "no-game-night"; gameNightDate: string }
+  | { ok: false; reason: "empty-import"; gameNightDate: string }
   | { ok: false; reason: "already-uploaded"; existing: GameNight };
 
 /** Lets the form warn before any review work that the night is missing or done. */
+/**
+ * The link door: read a night's check-ins straight out of the sheet it points
+ * at, instead of an admin exporting that sheet and uploading the file.
+ *
+ * Everything downstream is unchanged — same matching, same review queue, same
+ * commit. That is the point: two ways in, one place it lands.
+ */
+export type ParseAttendanceLinkResult =
+  | (ParseAttendanceResult & { tabTitle: string; totalRows: number; unfiltered: boolean })
+  | { ok: false; reason: "bad-url" | "not-shared" | "not-found" | "no-such-tab" | "wrong-shape" | "unknown" | "no-game-night"; detail?: string };
+
+export async function parseAndMatchAttendanceLink(
+  url: string,
+  gameNightDate: string,
+): Promise<ParseAttendanceLinkResult> {
+  await assertAdmin();
+
+  const hit = await findGameNightWithRow(gameNightDate);
+  // Attendance never creates a game night: without that night's registrations
+  // there is nobody to match a bare name against.
+  if (!hit) return { ok: false, reason: "no-game-night" };
+
+  const link = await readAttendanceLink(url, gameNightDate);
+  if (!link.ok) return { ok: false, reason: link.reason, detail: link.detail };
+
+  const matched = await matchParsedAttendance(link.parsed, hit.gameNight, link.tabTitle);
+  return { ...matched, tabTitle: link.tabTitle, totalRows: link.totalRows, unfiltered: link.unfiltered };
+}
+
 export async function checkAttendanceNight(
   gameNightDate: string,
 ): Promise<{ found: false } | { found: true; gameNight: GameNight; alreadyUploaded: boolean }> {
@@ -493,6 +547,15 @@ export async function commitAttendance(input: CommitAttendanceInput): Promise<Co
   if (!hit) return { ok: false, reason: "no-game-night", gameNightDate: input.gameNightDate };
   if (hit.gameNight.attendanceUploadedAt && !input.allowReupload) {
     return { ok: false, reason: "already-uploaded", existing: hit.gameNight };
+  }
+
+  // A sheet read before the doors open has no rows. Committing it would set
+  // `attendance_uploaded_at` with a count of zero, and from then on the night
+  // reads as "we have the list and nobody came" — the exact confusion that
+  // flag exists to prevent, and unrecoverable without editing the Sheet by
+  // hand. An import with nothing in it is refused instead.
+  if (input.rowCount === 0 || input.present.length === 0) {
+    return { ok: false, reason: "empty-import", gameNightDate: input.gameNightDate };
   }
 
   const all = await listParticipationsWithRows();
@@ -537,6 +600,9 @@ export async function commitAttendance(input: CommitAttendanceInput): Promise<Co
     attendanceUploadedAt: new Date().toISOString(),
     attendanceSourceFilename: input.sourceFilename,
     attendanceCount: attended,
+    // Kept alongside the filename rather than replacing it: together they say
+    // which door this night came through.
+    attendanceSheetUrl: input.sheetUrl ?? hit.gameNight.attendanceSheetUrl,
   };
 
   await commitAttendanceToSheets({

@@ -62,6 +62,13 @@ export interface GameNight {
   attendanceUploadedAt?: string;
   attendanceSourceFilename?: string;
   attendanceCount?: number;
+  /**
+   * The door check-in sheet this night reads from, when it was imported by
+   * link rather than by file. Kept alongside `attendanceSourceFilename`
+   * rather than replacing it: together they say which door a night came
+   * through, which the season audit will want long after the import.
+   */
+  attendanceSheetUrl?: string;
   autoConfirmedCount: number;
   flaggedCount: number;
   resolvedLinkExistingCount: number;

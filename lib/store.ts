@@ -28,6 +28,8 @@ const GAME_NIGHT_HEADERS = [
   // Set only when a door check-in list has been uploaded for this night.
   // Blank means "no file yet", which is NOT the same as "nobody came".
   "attendance_uploaded_at", "attendance_source_filename", "attendance_count",
+  // The linked door sheet, when a night was imported by link rather than file.
+  "attendance_sheet_url",
 ];
 
 const PARTICIPATION_HEADERS = [
@@ -114,6 +116,7 @@ function rowToGameNight(row: Record<string, string>): GameNight {
     attendanceUploadedAt: row.attendance_uploaded_at || undefined,
     attendanceSourceFilename: row.attendance_source_filename || undefined,
     attendanceCount: row.attendance_uploaded_at ? Number(row.attendance_count || 0) : undefined,
+    attendanceSheetUrl: row.attendance_sheet_url || undefined,
   };
 }
 
@@ -133,6 +136,7 @@ function gameNightToRow(gn: GameNight): Record<string, unknown> {
     attendance_uploaded_at: gn.attendanceUploadedAt ?? "",
     attendance_source_filename: gn.attendanceSourceFilename ?? "",
     attendance_count: gn.attendanceCount ?? "",
+    attendance_sheet_url: gn.attendanceSheetUrl ?? "",
   };
 }
 

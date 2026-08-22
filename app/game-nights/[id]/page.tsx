@@ -1,10 +1,10 @@
 import Link from "next/link";
-import { ArrowLeft, CalendarDays, Clock, Users } from "lucide-react";
+import { ArrowLeft, CalendarDays, Clock } from "lucide-react";
 import { Panel, PanelHeader } from "@/components/ui/panel";
 import { MetricPanel } from "@/components/dashboard/panel";
-import { Badge } from "@/components/ui/badge";
 import { getNightDetail } from "@/lib/game-nights";
 import { formatName } from "@/lib/player-name";
+import { NightRoster } from "@/components/game-nights/night-roster";
 
 export const dynamic = "force-dynamic";
 
@@ -137,63 +137,22 @@ export default async function GameNightDetailPage({ params }: { params: Promise<
             </ul>
           </Panel>
 
-          <Panel>
-            <PanelHeader
-              icon={Users}
-              title="Who was on the list"
-              subtitle={
-                hasAttendance
-                  ? "Everyone who registered, those who checked in first."
-                  : "Everyone who registered. Attendance fills in once the check-in file is uploaded."
-              }
-            />
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[560px] text-left text-[13px]">
-                <thead>
-                  <tr className="border-t border-border text-ink-secondary">
-                    <th className="py-2 pl-5 pr-4 font-medium">Player</th>
-                    <th className="py-2 pr-4 font-medium">Sport</th>
-                    <th className="py-2 pr-4 font-medium">Checked in</th>
-                    <th className="py-2 pr-5 font-medium">First time?</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {night.roster.map(({ player, participation }) => (
-                    <tr key={participation.participationId} className="border-t border-border">
-                      <td className="py-2.5 pl-5 pr-4">
-                        <Link
-                          href={`/players/${player.playerId}`}
-                          className="rounded-[5px] font-medium text-ink outline-none hover:underline focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
-                        >
-                          {formatName(player)}
-                        </Link>
-                        {!participation.registered && (
-                          <div className="text-[12px] text-ink-secondary">attended without registering</div>
-                        )}
-                      </td>
-                      <td className="py-2.5 pr-4 text-ink-secondary">
-                        {participation.attendedSport ?? participation.sportSelected}
-                      </td>
-                      <td className="py-2.5 pr-4">
-                        {participation.attendedAt ? (
-                          <span className="tabular-nums text-ink">
-                            {participation.attendedAt.slice(11, 16)}
-                          </span>
-                        ) : hasAttendance ? (
-                          <span className="text-ink-secondary">did not attend</span>
-                        ) : (
-                          <span className="text-ink-tertiary">—</span>
-                        )}
-                      </td>
-                      <td className="py-2.5 pr-5">
-                        {participation.isFirstParticipation ? <Badge tone="accent">First time</Badge> : null}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </Panel>
+          {/* Projected to four columns before it crosses to the client:
+              `Player.raw` is the whole 80-column form response, and a night
+              holds up to 180 of them. */}
+          <NightRoster
+            hasAttendance={hasAttendance}
+            rows={night.roster.map(({ player, participation }) => ({
+              playerId: player.playerId,
+              name: formatName(player),
+              sport: participation.attendedSport ?? participation.sportSelected,
+              // The hour as written at the door. Never timezone-converted —
+              // read as UTC a 5:33pm arrival becomes 1:33am the next day.
+              arrivedAt: participation.attendedAt ? participation.attendedAt.slice(11, 16) : undefined,
+              registered: participation.registered,
+              firstTime: participation.isFirstParticipation,
+            }))}
+          />
         </div>
       </div>
     </div>

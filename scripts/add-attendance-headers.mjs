@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Adds the six attendance column names to row 1 of the Sheet.
+ * Adds the attendance column names to row 1 of the Sheet.
  *
  * Why this exists: `lib/sheets.ts` writes rows positionally from the header
  * arrays in `lib/store.ts`, but nothing ever wrote those names into the
@@ -26,7 +26,13 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 
 /** Must stay in step with the header arrays in lib/store.ts. */
 const EXPECTED = {
-  "Game Nights": ["attendance_uploaded_at", "attendance_source_filename", "attendance_count"],
+  "Game Nights": [
+    "attendance_uploaded_at",
+    "attendance_source_filename",
+    "attendance_count",
+    // Added 2026-08-17 with the sheet-link import path.
+    "attendance_sheet_url",
+  ],
   Participations: ["attended_at", "attended_sport", "registered"],
 };
 

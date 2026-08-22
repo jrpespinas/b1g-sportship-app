@@ -231,6 +231,10 @@ attendance history, not just an audit log.
 | `resolved_link_existing_count` | number | Review outcome breakdown — | 
 | `resolved_add_new_count` | number | see [02-player-inventory.md](02-player-inventory.md) |
 | `resolved_skip_count` | number | for what each outcome means. |
+| `attendance_uploaded_at` | datetime | Set only once a door check-in list has landed. **Load-bearing:** without it there is no way to tell "we have the file and 80 people did not come" from "we have no file for this night", and a night with no file must never render as nobody attending. |
+| `attendance_source_filename` | string | The uploaded file, when the night came through the file door. |
+| `attendance_count` | number | Arrivals recorded for the night. |
+| `attendance_sheet_url` | string | The linked door sheet, when the night came through the link door instead. Added 2026-08-17; with `attendance_source_filename` it says which door a night came through. See [06-attendance.md](06-attendance.md). |
 
 ## Tab: `Participations`
 

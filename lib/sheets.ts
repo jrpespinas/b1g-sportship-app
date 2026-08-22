@@ -156,6 +156,64 @@ export function revalidateSheets(): void {
   updateTag(SHEETS_TAG);
 }
 
+/**
+ * Reads a tab out of **another** spreadsheet — the door check-in sheet a game
+ * night points at.
+ *
+ * Deliberately uncached. The season data is read on every page render and is
+ * worth the cache; this is read once, when an admin deliberately imports a
+ * night, and caching it would mean an import silently replaying a five-minute
+ * old copy of a sheet someone is still typing into.
+ *
+ * Failures are translated rather than propagated, because the two that
+ * actually happen — the sheet is not shared with the service account, or the
+ * URL points at nothing — are indistinguishable in the raw Google error and
+ * completely different to fix.
+ */
+export type ExternalSheetResult =
+  | { ok: true; title: string; values: string[][] }
+  | { ok: false; reason: "not-shared" | "not-found" | "no-such-tab" | "unknown"; detail?: string };
+
+export async function readExternalSheet(
+  spreadsheetId: string,
+  gid?: string,
+): Promise<ExternalSheetResult> {
+  const sheets = getClient();
+
+  let title: string | undefined;
+  try {
+    const meta = await sheets.spreadsheets.get({ spreadsheetId, fields: "sheets.properties" });
+    const tabs = meta.data.sheets ?? [];
+    // A URL's `gid` is the tab's numeric id; the values API wants its name.
+    const wanted = gid
+      ? tabs.find((t) => String(t.properties?.sheetId ?? "") === gid)
+      : tabs[0];
+    if (!wanted) return { ok: false, reason: "no-such-tab" };
+    title = wanted.properties?.title ?? undefined;
+    if (!title) return { ok: false, reason: "no-such-tab" };
+  } catch (error) {
+    return { ok: false, ...classify(error) };
+  }
+
+  try {
+    const res = await sheets.spreadsheets.values.get({
+      spreadsheetId,
+      range: `${title}!A1:ZZ`,
+    });
+    return { ok: true, title, values: (res.data.values ?? []) as string[][] };
+  } catch (error) {
+    return { ok: false, ...classify(error) };
+  }
+}
+
+function classify(error: unknown): { reason: "not-shared" | "not-found" | "unknown"; detail?: string } {
+  const status = (error as { status?: number; code?: number })?.status ?? (error as { code?: number })?.code;
+  const detail = error instanceof Error ? error.message : undefined;
+  if (status === 403) return { reason: "not-shared", detail };
+  if (status === 404) return { reason: "not-found", detail };
+  return { reason: "unknown", detail };
+}
+
 /** Appends rows in a single API call — always batch, never one call per row. */
 export async function appendRows(tabName: string, headers: string[], rows: Record<string, unknown>[]): Promise<void> {
   if (rows.length === 0) return;

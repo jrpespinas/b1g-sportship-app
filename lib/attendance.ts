@@ -65,6 +65,49 @@ export function parseCheckInName(raw: string): { lastName: string; firstName: st
   return { lastName, firstName, sport: emoji ? SPORT_BY_EMOJI[emoji] : undefined };
 }
 
+/**
+ * The tail both ingestion paths share: parse each name, drop the unusable,
+ * collapse repeat taps.
+ *
+ * Extracted 2026-08-17 when the sheet-link path arrived. The two doors differ
+ * only in where the cells come from — an `.xlsx` a browser uploaded, or a tab
+ * the app reads directly — and the rules about what a check-in *means* must
+ * not be written twice, or the two paths will drift the way the segmentation
+ * rules did.
+ */
+export function collapseAttendanceRows(
+  incoming: { rowIndex: number; raw: string; checkedInAt: string }[],
+): AttendanceParseResult {
+  const rows: IncomingAttendanceRow[] = [];
+  const seen = new Set<string>();
+  let duplicateCount = 0;
+  let unusableRowCount = 0;
+
+  for (const entry of incoming) {
+    const raw = entry.raw.trim();
+    if (!raw) continue;
+
+    const { lastName, firstName, sport } = parseCheckInName(raw);
+    if (!lastName && !firstName) {
+      unusableRowCount += 1;
+      continue;
+    }
+
+    // First tap wins: it is the arrival time, and a second tap is the same
+    // arrival recorded twice rather than a second arrival.
+    const key = normalizeName(firstName, lastName);
+    if (seen.has(key)) {
+      duplicateCount += 1;
+      continue;
+    }
+    seen.add(key);
+
+    rows.push({ rowIndex: entry.rowIndex, raw, lastName, firstName, sport, checkedInAt: entry.checkedInAt });
+  }
+
+  return { ok: true, rows, duplicateCount, unusableRowCount };
+}
+
 export async function parseAttendanceFile(buffer: ArrayBuffer): Promise<AttendanceParseResult> {
   const workbook = new ExcelJS.Workbook();
   await workbook.xlsx.load(buffer);
@@ -85,42 +128,40 @@ export async function parseAttendanceFile(buffer: ArrayBuffer): Promise<Attendan
   }
   const timeCol = headerToCol.get(TIMESTAMP_HEADER);
 
-  const rows: IncomingAttendanceRow[] = [];
-  const seen = new Set<string>();
-  let duplicateCount = 0;
-  let unusableRowCount = 0;
-
+  const incoming: { rowIndex: number; raw: string; checkedInAt: string }[] = [];
   sheet.eachRow((row, rowNumber) => {
     if (rowNumber === 1) return;
-    const raw = cellText(row.getCell(nameCol)).trim();
-    if (!raw) return;
-
-    const { lastName, firstName, sport } = parseCheckInName(raw);
-    if (!lastName && !firstName) {
-      unusableRowCount += 1;
-      return;
-    }
-
-    // First tap wins: it is the arrival time, and a second tap is the same
-    // arrival recorded twice rather than a second arrival.
-    const key = normalizeName(firstName, lastName);
-    if (seen.has(key)) {
-      duplicateCount += 1;
-      return;
-    }
-    seen.add(key);
-
-    rows.push({
+    incoming.push({
       rowIndex: rowNumber,
-      raw,
-      lastName,
-      firstName,
-      sport,
+      raw: cellText(row.getCell(nameCol)).trim(),
       checkedInAt: timeCol ? cellText(row.getCell(timeCol)) : "",
     });
   });
 
-  return { ok: true, rows, duplicateCount, unusableRowCount };
+  return collapseAttendanceRows(incoming);
+}
+
+/**
+ * The same two columns, read straight out of a Google Sheet tab instead of an
+ * uploaded file.
+ *
+ * `values[0]` is the header row, exactly as the Sheets API returns it.
+ */
+export function parseAttendanceValues(values: string[][]): AttendanceParseResult {
+  const headers = (values[0] ?? []).map((h) => String(h ?? "").trim());
+  const nameCol = headers.indexOf(ATTENDANCE_HEADER);
+  if (nameCol === -1) {
+    return { ok: false, missingColumns: [ATTENDANCE_HEADER], rows: [], duplicateCount: 0, unusableRowCount: 0 };
+  }
+  const timeCol = headers.indexOf(TIMESTAMP_HEADER);
+
+  return collapseAttendanceRows(
+    values.slice(1).map((line, i) => ({
+      rowIndex: i + 2, // +2: 1-indexed, plus the header row
+      raw: String(line[nameCol] ?? "").trim(),
+      checkedInAt: timeCol === -1 ? "" : String(line[timeCol] ?? "").trim(),
+    })),
+  );
 }
 
 /** Why a candidate is being suggested — shown, never left implicit. */

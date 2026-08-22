@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { AlertTriangle, ArrowLeft, CheckCircle2, FileSpreadsheet } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { clsx } from "@/lib/clsx";
 import { Panel, PanelHeader } from "@/components/ui/panel";
 import { Signal, SignalList } from "@/components/ui/signal";
 import { MetricPanel } from "@/components/dashboard/panel";
@@ -12,6 +13,7 @@ import {
   checkAttendanceNight,
   commitAttendance,
   parseAndMatchAttendance,
+  parseAndMatchAttendanceLink,
   type CommitAttendanceResult,
   type ParseAttendanceResult,
 } from "@/app/upload/actions";
@@ -89,6 +91,35 @@ function Shell({ children }: { children: React.ReactNode }) {
   );
 }
 
+/**
+ * Every failure names what to do about it.
+ *
+ * "Not shared" and "not found" are the two that actually happen with a linked
+ * sheet, they are indistinguishable in Google's raw error, and they have
+ * completely different fixes — so they get completely different sentences.
+ */
+function explainFailure(reason: string): string {
+  switch (reason) {
+    case "empty-file":
+      return "That file is empty.";
+    case "bad-url":
+      return "That doesn't look like a Google Sheets link. Copy the URL from the sheet's address bar.";
+    case "not-shared":
+      return "The app cannot open that sheet. Share it with the service account as a Viewer, then try again.";
+    case "not-found":
+      return "No sheet at that link. Check the URL, or that the sheet has not been deleted.";
+    case "no-such-tab":
+      return "That link points at a tab that no longer exists. Open the sheet and copy the URL again.";
+    case "no-game-night":
+      return "No game night on that date. Attendance attaches to a night already in the estate.";
+    case "wrong-shape":
+    case "missing-columns":
+      return `This doesn't look like a check-in list — no "Attendance" column found.`;
+    default:
+      return "Could not read that sheet. Check the link and that the app has access to it.";
+  }
+}
+
 export function AttendanceFlow({ onBack }: { onBack: () => void }) {
   const [step, setStep] = useState<Step>("select");
   const [gameNightDate, setGameNightDate] = useState(todayISO());
@@ -99,10 +130,21 @@ export function AttendanceFlow({ onBack }: { onBack: () => void }) {
   const [index, setIndex] = useState(0);
   const [summary, setSummary] = useState<Summary | null>(null);
   const [pending, startTransition] = useTransition();
+  /**
+   * Which door this night comes through. Both stay: the link is the weekly
+   * path, the file is how the earlier nights get backfilled and what still
+   * works when a sheet is unreachable.
+   */
+  const [source, setSource] = useState<"link" | "file">("link");
+  const [sheetUrl, setSheetUrl] = useState("");
+  /** Set only by an explicit click, never by default — see the guard below. */
+  const [reimport, setReimport] = useState(false);
+  const [canReimport, setCanReimport] = useState(false);
 
   function begin() {
-    if (!file) return;
+    if (source === "file" ? !file : !sheetUrl.trim()) return;
     setError(null);
+    setCanReimport(false);
     startTransition(async () => {
       // The night has to exist before a bare name can be matched to anyone.
       const night = await checkAttendanceNight(gameNightDate);
@@ -112,25 +154,39 @@ export function AttendanceFlow({ onBack }: { onBack: () => void }) {
         );
         return;
       }
-      if (night.alreadyUploaded) {
+      if (night.alreadyUploaded && !reimport) {
+        // Not a hard block any more. The commit upserts on (night, player), so
+        // re-reading a sheet someone has since corrected is a legitimate thing
+        // to want — it just must never happen by accident.
+        setCanReimport(true);
         setError(
-          `Attendance for ${gameNightDate} was already uploaded (${night.gameNight.attendanceSourceFilename || "unnamed file"}). Re-uploading would overwrite it, so this is blocked.`,
+          `${gameNightDate} already has attendance from ${night.gameNight.attendanceSourceFilename || "an earlier import"}. Re-importing replaces it row by row rather than adding a second copy.`,
         );
         return;
       }
 
-      const form = new FormData();
-      form.set("file", file);
-      form.set("gameNightDate", gameNightDate);
-      const result = await parseAndMatchAttendance(form);
+      const result = source === "link"
+        ? await parseAndMatchAttendanceLink(sheetUrl.trim(), gameNightDate)
+        : await (async () => {
+            const form = new FormData();
+            form.set("file", file!);
+            form.set("gameNightDate", gameNightDate);
+            return parseAndMatchAttendance(form);
+          })();
+
       if (!result.ok) {
+        setError(explainFailure(result.reason));
+        return;
+      }
+      if (result.rowCount === 0) {
         setError(
-          result.reason === "empty-file"
-            ? "That file is empty."
-            : `This doesn't look like a check-in list — no "Attendance" column found.`,
+          source === "link"
+            ? `That sheet has no check-ins for ${gameNightDate} yet. Nothing is imported — a night recorded with zero arrivals would read as "everybody stayed home" rather than "the night has not happened".`
+            : "That file has no check-in rows.",
         );
         return;
       }
+
       setParsed(result);
       setIndex(0);
       setResolved({});
@@ -150,6 +206,8 @@ export function AttendanceFlow({ onBack }: { onBack: () => void }) {
       const committed = await commitAttendance({
         gameNightDate,
         sourceFilename: result.sourceFilename,
+        sheetUrl: source === "link" ? sheetUrl.trim() : undefined,
+        allowReupload: reimport,
         rowCount: result.rowCount,
         present,
       });
@@ -157,6 +215,8 @@ export function AttendanceFlow({ onBack }: { onBack: () => void }) {
         setError(
           committed.reason === "no-game-night"
             ? `No game night on ${committed.gameNightDate}.`
+            : committed.reason === "empty-import"
+            ? "Nothing to import — that check-in list is empty for this night."
             : "Attendance for this night was already uploaded.",
         );
         setStep("select");
@@ -309,24 +369,75 @@ export function AttendanceFlow({ onBack }: { onBack: () => void }) {
             />
           </div>
           <div>
-            <label className="block text-[12px] font-medium text-ink-secondary" htmlFor="attendance-file">
-              Check-in file
-            </label>
-            <input
-              id="attendance-file"
-              type="file"
-              accept=".xlsx"
-              onChange={(e) => {
-                setFile(e.target.files?.[0] ?? null);
-                setError(null);
-              }}
-              className="mt-1.5 w-full rounded-[8px] border border-dashed border-border bg-surface px-3 py-1.5 text-[13px] text-ink-secondary file:mr-3 file:rounded-[6px] file:border-0 file:bg-surface-subtle file:px-3 file:py-1.5 file:text-[13px] file:font-medium file:text-ink"
-            />
-            {file && (
-              <div className="mt-2 flex items-center gap-1.5 text-[12px] text-ink-secondary">
-                <FileSpreadsheet className="size-3.5 shrink-0" strokeWidth={2} aria-hidden />
-                {file.name}
+            <div className="flex items-baseline justify-between gap-2">
+              <span className="text-[12px] font-medium text-ink-secondary">
+                {source === "link" ? "Check-in sheet" : "Check-in file"}
+              </span>
+              {/* Same switch vocabulary the dashboard uses for two readings of
+                  one thing — this is two doors into one import. */}
+              <div
+                className="flex rounded-[7px] border border-border-strong p-0.5"
+                role="group"
+                aria-label="Where the check-ins come from"
+              >
+                {(["link", "file"] as const).map((option) => (
+                  <button
+                    key={option}
+                    type="button"
+                    onClick={() => {
+                      setSource(option);
+                      setError(null);
+                    }}
+                    aria-pressed={source === option}
+                    className={clsx(
+                      "rounded-[5px] px-2 py-1 text-[12px] font-medium outline-none transition-colors focus-visible:ring-2 focus-visible:ring-accent pointer-coarse:min-h-11",
+                      source === option ? "bg-surface-subtle text-ink" : "text-ink-secondary hover:text-ink",
+                    )}
+                  >
+                    {option === "link" ? "Sheet link" : "File"}
+                  </button>
+                ))}
               </div>
+            </div>
+
+            {source === "link" ? (
+              <>
+                <input
+                  id="attendance-sheet"
+                  type="url"
+                  inputMode="url"
+                  placeholder="https://docs.google.com/spreadsheets/d/…"
+                  value={sheetUrl}
+                  onChange={(e) => {
+                    setSheetUrl(e.target.value);
+                    setError(null);
+                  }}
+                  className="mt-1.5 w-full rounded-[8px] border border-border-strong bg-surface px-3 py-2 text-[13px] text-ink outline-none placeholder:text-ink-tertiary focus-visible:ring-2 focus-visible:ring-accent"
+                />
+                <p className="mt-2 text-[12px] leading-relaxed text-ink-secondary">
+                  The sheet the door form writes into. Rows are matched to this night by their
+                  timestamp, so a sheet covering the whole season works.
+                </p>
+              </>
+            ) : (
+              <>
+                <input
+                  id="attendance-file"
+                  type="file"
+                  accept=".xlsx"
+                  onChange={(e) => {
+                    setFile(e.target.files?.[0] ?? null);
+                    setError(null);
+                  }}
+                  className="mt-1.5 w-full rounded-[8px] border border-dashed border-border bg-surface px-3 py-1.5 text-[13px] text-ink-secondary file:mr-3 file:rounded-[6px] file:border-0 file:bg-surface-subtle file:px-3 file:py-1.5 file:text-[13px] file:font-medium file:text-ink"
+                />
+                {file && (
+                  <div className="mt-2 flex items-center gap-1.5 text-[12px] text-ink-secondary">
+                    <FileSpreadsheet className="size-3.5 shrink-0" strokeWidth={2} aria-hidden />
+                    {file.name}
+                  </div>
+                )}
+              </>
             )}
           </div>
         </div>
@@ -334,12 +445,31 @@ export function AttendanceFlow({ onBack }: { onBack: () => void }) {
         {error && (
           <div className="mx-5 mb-5 flex gap-2 rounded-[8px] border border-danger bg-danger-tint p-3">
             <AlertTriangle className="mt-0.5 size-4 shrink-0 text-danger" strokeWidth={2} aria-hidden />
-            <p className="text-[13px] leading-relaxed text-ink">{error}</p>
+            <div className="min-w-0">
+              <p className="text-[13px] leading-relaxed text-ink">{error}</p>
+              {canReimport && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setReimport(true);
+                    setError(null);
+                    setCanReimport(false);
+                  }}
+                  className="mt-2 rounded-[5px] text-[13px] font-medium text-accent-ink underline decoration-accent/40 underline-offset-2 outline-none hover:decoration-accent focus-visible:ring-2 focus-visible:ring-accent pointer-coarse:min-h-11"
+                >
+                  Re-import this night anyway
+                </button>
+              )}
+            </div>
           </div>
         )}
 
         <div className="border-t border-border px-5 py-3">
-          <Button size="sm" onClick={begin} disabled={!file || pending}>
+          <Button
+            size="sm"
+            onClick={begin}
+            disabled={pending || (source === "file" ? !file : !sheetUrl.trim())}
+          >
             {pending ? "Matching…" : "Match the check-in list"}
           </Button>
         </div>

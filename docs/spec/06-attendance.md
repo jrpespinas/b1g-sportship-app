@@ -62,6 +62,56 @@ not come" from "we have no file for this night". A night with no check-in file
 must never render as nobody attending — the same trap the discipleship
 capture-gap fell into, which produced a real bug.
 
+## Two doors, one store — added 2026-08-17
+
+Attendance arrives either as an uploaded `.xlsx` or by **linking the Google
+Sheet the door form writes into**. Both run the same parse, the same matching,
+the same review queue, and land in the same place. This is a second way in,
+not a second store: two stores would be the shape of bug that produced two
+segmentation rules and two definitions of "seeker".
+
+The link is **per game night**, held in `Game Nights.attendance_sheet_url`
+beside `attendance_source_filename` — together they say which door a night
+came through.
+
+**Rows are filtered by the night's date even though the link is per-night.** A
+Google Form writes every response into one accumulating tab, so a link pasted
+for two nights would otherwise import the whole season into both. Per-night
+links are the interface; the date filter is the safety net. A sheet with no
+`Timestamp` column is taken whole, which is the other real shape — a tab built
+for one night.
+
+The timestamp is compared **as written**, never parsed into a `Date`. Verified:
+a 17:33 check-in stays 17:33.
+
+The file path stays. It is how the earlier nights get backfilled, and what
+still works when a sheet is unreachable.
+
+### Re-importing
+
+The hard "already uploaded" block becomes a confirmation. `commitAttendance`
+matches on `(game_night_id, player_id)` and updates the row it finds, so
+re-reading a sheet someone has since corrected replaces rows rather than
+adding a second copy. It must never happen by accident, so it takes an
+explicit click.
+
+### An empty import is refused
+
+A sheet read before the doors open has no rows, and committing it would set
+`attendance_uploaded_at` with a count of zero — after which the night reads as
+*"we have the list and nobody came"*, which is precisely what that flag exists
+to prevent, and is unrecoverable without editing the Sheet by hand. Refused in
+the UI and again in `commitAttendance`. Found the first time the real door
+sheet was read, an hour before its own game night.
+
+### Failures the admin sees
+
+Each names its own fix, because the two that actually happen — a sheet not
+shared with the service account, and a URL pointing at nothing — are
+indistinguishable in Google's raw error and need completely different actions.
+`bad-url`, `not-shared`, `not-found`, `no-such-tab`, `wrong-shape`,
+`no-game-night`.
+
 ## Rules the upload enforces
 
 - **Attendance never creates a game night.** It attaches to one registration
@@ -71,6 +121,25 @@ capture-gap fell into, which produced a real bug.
 - **Re-uploading a night that already has attendance is blocked**, the same
   guard registration uses for a duplicate date.
 - **Walk-ins go to review as possible new people**, not silently into a tally.
+
+## The night's roster is sortable and filterable — added 2026-08-17
+
+`/game-nights/[id]` renders the roster as an interactive table: sort by player,
+sport, arrival time or first-timer status, and filter by attendance status
+(came · did not come · walked in), sport, first-timers, or a name search.
+
+Two rules the table encodes:
+
+- **Someone who never arrived sorts last in both directions.** They have no
+  place on a time axis, and letting the flip carry them to the top would put
+  fifty-seven no-shows above the arrivals on "latest first".
+- **The attendance filters only appear once a check-in list exists.** Without
+  one, "did not come" would silently return the entire roster.
+
+Rows are projected to the four columns the table draws before crossing to the
+client. `Player.raw` is the whole 80-column form response and a night holds up
+to 180 people, so passing the objects through would put megabytes into the page
+— and would ship every member's contact details to render four columns.
 
 ## Backfill
 

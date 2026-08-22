@@ -7,9 +7,6 @@ import {
   ArrowDownRight,
   ArrowUpRight,
   Check,
-  ChevronDown,
-  ChevronUp,
-  ChevronsUpDown,
   Copy,
   Download,
   Minus,
@@ -18,6 +15,7 @@ import {
 } from "lucide-react";
 import { Panel, PanelHeader } from "@/components/ui/panel";
 import { Badge } from "@/components/ui/badge";
+import { SortIcon, type SortDirection } from "@/components/ui/sort-icon";
 import { Button } from "@/components/ui/button";
 import { clsx } from "@/lib/clsx";
 import { formatDate } from "@/lib/format-date";
@@ -78,7 +76,6 @@ function lastSeenLabel(nightsSince: number | undefined): string {
 }
 
 type SortKey = "name" | "segment" | "nights" | "lastSeen";
-type SortDirection = "asc" | "desc";
 
 const SORT_COLUMNS: { key: SortKey; label: string; className?: string }[] = [
   { key: "name", label: "Player" },
@@ -102,14 +99,7 @@ function compare(a: PlayerSummary, b: PlayerSummary, key: SortKey): number {
   }
 }
 
-function SortIcon({ active, direction }: { active: boolean; direction: SortDirection }) {
-  if (!active) return <ChevronsUpDown size={13} strokeWidth={2} className="text-ink-tertiary" />;
-  return direction === "asc" ? (
-    <ChevronUp size={13} strokeWidth={2} className="text-ink" />
-  ) : (
-    <ChevronDown size={13} strokeWidth={2} className="text-ink" />
-  );
-}
+
 
 /**
  * What each funnel stage means once you are standing in its list. Written for
