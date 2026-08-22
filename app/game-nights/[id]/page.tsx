@@ -128,6 +128,10 @@ export default async function GameNightDetailPage({ params }: { params: Promise<
           </Panel>
         )}
 
+        {/* Sports and the door sheet are both short; the roster is 173 rows
+            and four sortable columns, so it takes the full measure rather
+            than the 320px rail it inherited when the door panel was slotted
+            into this grid. */}
         <div className="mt-3 grid grid-cols-1 gap-3 lg:grid-cols-[320px_1fr]">
           <Panel>
             <PanelHeader icon={CalendarDays} title="Sports" />
@@ -147,6 +151,7 @@ export default async function GameNightDetailPage({ params }: { params: Promise<
             initialUrl={night.gameNight.attendanceSheetUrl}
             canEdit={role === "admin"}
           />
+        </div>
 
           {/* Projected to four columns before it crosses to the client:
               `Player.raw` is the whole 80-column form response, and a night
@@ -164,7 +169,6 @@ export default async function GameNightDetailPage({ params }: { params: Promise<
               firstTime: participation.isFirstParticipation,
             }))}
           />
-        </div>
       </div>
     </div>
   );
