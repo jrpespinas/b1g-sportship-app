@@ -270,7 +270,7 @@ history, and every returnee/first-timer/frequency metric in
 | `game_night_id` | string | FK to `Game Nights`. |
 | `sport_selected` | string | 🏀 Basketball / 🏸 Badminton / 🏐 Volleyball / 🥒 Pickleball / 🏃 Running — fixed 5-value set, confirmed by dashboard requirements. |
 | `skill_level` | string | Kept for inventory completeness (team-balancing use); not a dashboard metric. |
-| `is_first_participation` | boolean | **Computed at write time**, not read from the form's self-reported "Is this your first time registering?" checkbox — self-report is unreliable (people misremember/misclick). True iff no earlier `Participations` row exists for this `player_id`. |
+| `is_first_participation` | boolean | **Derived from history, never from the form's self-reported "Is this your first time registering?" checkbox** — self-report is unreliable (121 players say "first time" on a form despite earlier nights). True on exactly one row per person: their earliest game night by date, registered *or* walk-in. **Revised 2026-10-27:** this was computed once at upload, and uploads arriving out of date order left 85 rows wrong (Apr 25 showed 28 first-timers against a true 60). The app now recomputes it on every read (`lib/first-participation.ts`); the stored column is a convenience copy, re-synced by `scripts/fix-first-participation.mjs`. |
 | `submitted_at` | datetime | Raw `Timestamp` from the form row — when they filled it out, not necessarily the game night date. |
 | `dgroup_status` | string | **Point-in-time**, added 2026-08-11. What this person answered on *this night's* form. See the note below. |
 | `dgroup_interested_in_joining` | string | Point-in-time, as above. |

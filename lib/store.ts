@@ -8,6 +8,7 @@ import "server-only";
 import { nanoid } from "nanoid";
 import { appendRows, readTab, revalidateSheets, updateRows } from "./sheets";
 import { normalizeEmail } from "./fuzzy";
+import { withDerivedFirstParticipation } from "./first-participation";
 import type { GameNight, Participation, Player } from "./types";
 
 const PLAYERS_TAB = "Players";
@@ -188,9 +189,15 @@ export async function listGameNights(): Promise<GameNight[]> {
   return rows.map((r) => rowToGameNight(r.row));
 }
 
+/**
+ * `isFirstParticipation` is recomputed from history here rather than trusted
+ * from the stored column, which upload order can leave wrong — see
+ * lib/first-participation.ts. Every surface reads through this, so none of
+ * them can disagree about who was new on a night.
+ */
 export async function listParticipations(): Promise<Participation[]> {
-  const rows = await readTab(PARTICIPATIONS_TAB);
-  return rows.map((r) => rowToParticipation(r.row));
+  const [rows, gameNights] = await Promise.all([readTab(PARTICIPATIONS_TAB), listGameNights()]);
+  return withDerivedFirstParticipation(rows.map((r) => rowToParticipation(r.row)), gameNights);
 }
 
 export interface PlayerWithRow {
@@ -242,8 +249,11 @@ export interface ParticipationWithRow {
 
 /** Row numbers included, so a check-in can be written onto an existing row. */
 export async function listParticipationsWithRows(): Promise<ParticipationWithRow[]> {
-  const rows = await readTab(PARTICIPATIONS_TAB);
-  return rows.map((r) => ({ participation: rowToParticipation(r.row), sheetRow: r.sheetRow }));
+  const [rows, gameNights] = await Promise.all([readTab(PARTICIPATIONS_TAB), listGameNights()]);
+  // Derived like listParticipations, so a check-in written back onto a row
+  // also corrects that row's stored first-timer value.
+  const participations = withDerivedFirstParticipation(rows.map((r) => rowToParticipation(r.row)), gameNights);
+  return participations.map((participation, i) => ({ participation, sheetRow: rows[i].sheetRow }));
 }
 
 export async function findGameNightWithRow(

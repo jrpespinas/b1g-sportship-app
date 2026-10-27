@@ -25,7 +25,7 @@ person's latest state — they require per-game-night history.
 3. **Gender ratio.** `Players.gender` distribution, all-time (gender is an
    identity field, not per-game-night, so this isn't scoped to a single week).
 4. **Returnees vs. first-timers (counts).** Per `Participations` row,
-   `is_first_participation` (computed at write time — see
+   `is_first_participation` (derived from history on read — see
    [01-data-model.md](01-data-model.md), not the form's self-reported
    checkbox) splits the count. Report both as a total-to-date figure and,
    probably more useful operationally, for the latest game night specifically.

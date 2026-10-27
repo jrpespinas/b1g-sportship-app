@@ -13,6 +13,7 @@ import {
 } from "@/lib/attendance";
 import { readAttendanceLink } from "@/lib/attendance-link";
 import { buildHistories, type PlayerHistory } from "@/lib/candidate-evidence";
+import { earliestDateByPlayer } from "@/lib/first-participation";
 import {
   buildGameNight,
   buildParticipation,
@@ -185,17 +186,22 @@ function newPlayerAndParticipation(row: IncomingRow, gameNightId: string): { pla
   return { player, participation };
 }
 
-// A "returning" match is by definition a player who already has a Players
-// row — and every Players row is created together with its first
-// Participation (see newPlayerAndParticipation) — so isFirstParticipation is
-// always false here; no extra read needed to confirm it.
-function returningParticipation(row: IncomingRow, player: Player, gameNightId: string): Participation {
+// A "returning" match already has a Players row, so this is usually not their
+// first night — but not always. A night older than everything on record for
+// them (a backfilled export) IS their first, and the caller passes that in.
+// See lib/first-participation.ts; the app derives the value on read either way.
+function returningParticipation(
+  row: IncomingRow,
+  player: Player,
+  gameNightId: string,
+  isFirstParticipation: boolean,
+): Participation {
   return buildParticipation({
     playerId: player.playerId,
     gameNightId,
     sportSelected: row.sportSelected,
     skillLevel: row.skillLevel,
-    isFirstParticipation: false,
+    isFirstParticipation,
     submittedAt: row.submittedAt,
     registered: true,
     dgroupStatus: row.dgroupStatus,
@@ -303,6 +309,7 @@ export async function commitBatch(input: CommitBatchInput): Promise<CommitBatchR
     const current = latestKnownDateByPlayerId.get(p.playerId);
     if (!current || date > current) latestKnownDateByPlayerId.set(p.playerId, date);
   }
+  const earliestKnownDateByPlayerId = earliestDateByPlayer(existingParticipations, existingGameNights);
 
   const gameNight = buildGameNight({
     gameNightDate: input.gameNightDate,
@@ -333,7 +340,9 @@ export async function commitBatch(input: CommitBatchInput): Promise<CommitBatchR
     // The Participation row is always written — it's this night's own record
     // and is safe regardless of upload order. Only the Player snapshot
     // refresh is chronology-gated.
-    participations.push(returningParticipation(row, known.player, gameNight.gameNightId));
+    const earliestKnownDate = earliestKnownDateByPlayerId.get(playerId);
+    const isFirst = !earliestKnownDate || input.gameNightDate < earliestKnownDate;
+    participations.push(returningParticipation(row, known.player, gameNight.gameNightId, isFirst));
 
     const latestKnownDate = latestKnownDateByPlayerId.get(playerId);
     const isChronologicallyCurrent = !latestKnownDate || input.gameNightDate >= latestKnownDate;
@@ -558,8 +567,12 @@ export async function commitAttendance(input: CommitAttendanceInput): Promise<Co
     return { ok: false, reason: "empty-import", gameNightDate: input.gameNightDate };
   }
 
-  const all = await listParticipationsWithRows();
+  const [all, gameNights] = await Promise.all([listParticipationsWithRows(), listGameNights()]);
   const thisNight = all.filter((p) => p.participation.gameNightId === hit.gameNight.gameNightId);
+  const earliestKnownDateByPlayerId = earliestDateByPlayer(
+    all.map((p) => p.participation),
+    gameNights,
+  );
   const byPlayerId = new Map(thisNight.map((p) => [p.participation.playerId, p]));
 
   const updated: ParticipationWithRow[] = [];
@@ -579,13 +592,15 @@ export async function commitAttendance(input: CommitAttendanceInput): Promise<Co
       continue;
     }
     // Checked in without registering. The sport comes from the door list
-    // because there is no registration to take one from.
+    // because there is no registration to take one from. A walk-in on a
+    // night before anything else on record for them is their first night.
+    const earliestKnownDate = earliestKnownDateByPlayerId.get(playerId);
     walkIns.push(
       buildParticipation({
         playerId,
         gameNightId: hit.gameNight.gameNightId,
         sportSelected: row.sport ?? "Unspecified",
-        isFirstParticipation: false,
+        isFirstParticipation: !earliestKnownDate || input.gameNightDate < earliestKnownDate,
         submittedAt: "",
         registered: false,
         attendedAt: row.checkedInAt,

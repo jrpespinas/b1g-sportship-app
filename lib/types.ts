@@ -82,6 +82,8 @@ export interface Participation {
   gameNightId: string;
   sportSelected: Sport | string;
   skillLevel?: string;
+  /** Earliest night on record for this person, registered or walked in.
+   *  Derived from history on every read — see lib/first-participation.ts. */
   isFirstParticipation: boolean;
   submittedAt: string;
 
